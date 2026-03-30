@@ -1,0 +1,72 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // ── Users collection ──────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Any authenticated user can read their own document; admins can read all
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Only the owner can create their own document (during registration)
+      allow create: if isOwner(uid);
+
+      // Owner can update their own non-role fields; admin can update any field
+      allow update: if
+        (isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['role', 'uid', 'createdAt'])) ||
+        isAdmin();
+
+      // Only admin can delete user documents
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // ── Usernames (lookup index) ───────────────────────────────────────────────
+    match /usernames/{username} {
+      allow read:   if true;          // needed for username lookup on login
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated() &&
+        resource.data.uid == request.auth.uid;
+    }
+
+    // ── Applications collection ───────────────────────────────────────────────
+    match /applications/{applicationId} {
+      // Client can read their own applications; admin can read all
+      allow read: if
+        (isAuthenticated() && resource.data.clientUid == request.auth.uid) ||
+        isAdmin();
+
+      // Only authenticated clients can create applications
+      allow create: if
+        isAuthenticated() &&
+        request.resource.data.clientUid == request.auth.uid &&
+        request.resource.data.status == 'pending_review';
+
+      // Clients can update their own application ONLY when it is 'returned'
+      // (to resubmit corrected documents). Admins can update any field.
+      allow update: if
+        (isAuthenticated() &&
+          resource.data.clientUid == request.auth.uid &&
+          resource.data.status == 'returned' &&
+          request.resource.data.status == 'pending_review') ||
+        isAdmin();
+
+      // Only admin can delete applications
+      allow delete: if isAdmin();
+    }
+  }
+}
