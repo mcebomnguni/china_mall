@@ -27,6 +27,9 @@ import '../../features/vendor/screens/vendor_products_screen.dart';
 import '../../features/vendor/screens/vendor_orders_screen.dart';
 import '../../features/vendor/screens/vendor_payouts_screen.dart';
 import '../../features/vendor/screens/add_product_screen.dart';
+import '../../features/vendor/screens/vendor_type_screen.dart';
+import '../../features/vendor/screens/vendor_onboarding_formal_screen.dart';
+import '../../features/vendor/screens/vendor_onboarding_informal_screen.dart';
 import '../../features/courier/screens/courier_dashboard_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../main_shell.dart';
@@ -188,6 +191,15 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
               path: '/vendor/store/register',
               builder: (_, __) => const RegisterStoreScreen()),
+          GoRoute(
+              path: '/vendor/setup',
+              builder: (_, __) => const VendorTypeScreen()),
+          GoRoute(
+              path: '/vendor/onboarding/formal',
+              builder: (_, __) => const VendorOnboardingFormalScreen()),
+          GoRoute(
+              path: '/vendor/onboarding/informal',
+              builder: (_, __) => const VendorOnboardingInformalScreen()),
           GoRoute(
               path: '/vendor/products/:id/edit',
               builder: (_, state) => EditProductScreen(
