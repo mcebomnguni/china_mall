@@ -198,6 +198,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final email = username.trim();
+      debugPrint('🔐 Attempting login for: $email');
+      debugPrint('🔌 Supabase ready: ${SupabaseService.isReady}');
       final authResponse = await SupabaseService.client.auth.signInWithPassword(
         email: email,
         password: password,
@@ -212,16 +214,32 @@ class AuthProvider extends ChangeNotifier {
         authResponse.session!.refreshToken ?? '',
       );
       await _markAuthenticated();
-      await NotificationService.registerToken();
+      try {
+        await NotificationService.registerToken();
+      } catch (_) {}
       _user = await _loadSupabaseProfile();
       _status = AuthStatus.authenticated;
       return true;
     } on AuthException catch (e) {
-      _error = e.message;
+      debugPrint('❌ AuthException: ${e.message} (statusCode: ${e.statusCode})');
+      final msg = e.message.toLowerCase();
+      if (msg.contains('invalid login credentials') ||
+          msg.contains('invalid credentials')) {
+        _error =
+            'Incorrect email or password. If you just registered, please confirm your email first.';
+      } else if (msg.contains('email not confirmed')) {
+        _error = 'Please confirm your email address before signing in.';
+      } else if (msg.contains('too many requests') ||
+          msg.contains('rate limit')) {
+        _error = 'Too many attempts. Please wait a moment and try again.';
+      } else {
+        _error = e.message;
+      }
       _status = AuthStatus.unauthenticated;
       return false;
-    } catch (_) {
-      _error = 'Unable to sign in right now.';
+    } catch (e) {
+      debugPrint('Login error: $e');
+      _error = 'Unable to sign in right now. Check your internet connection.';
       _status = AuthStatus.unauthenticated;
       return false;
     } finally {

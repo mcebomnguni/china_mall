@@ -4,6 +4,9 @@
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
 
+# ─── Google Play Core (deferred components – not used, suppress R8 warnings) ──
+-dontwarn com.google.android.play.core.**
+
 # ─── Keep crash line numbers ──────────────────────────────────────────────────
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
