@@ -323,16 +323,43 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
                               children: [
-                                ClipRRect(
-                                  borderRadius:
-                                      const BorderRadius.vertical(
-                                          top: Radius.circular(16)),
-                                  child: AppNetworkImage(
-                                    url: p['image'] ?? '',
-                                    height: 140,
-                                    width: double.infinity,
+                                Stack(children: [
+                                  ClipRRect(
+                                    borderRadius:
+                                        const BorderRadius.vertical(
+                                            top: Radius.circular(16)),
+                                    child: AppNetworkImage(
+                                      url: p['image'] ?? '',
+                                      height: 140,
+                                      width: double.infinity,
+                                    ),
                                   ),
-                                ),
+                                  if (p['is_on_sale'] == true)
+                                    Positioned(
+                                      top: 8,
+                                      left: 8,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 7, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.error,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          (p['discount_percent'] as num? ?? 0) > 0
+                                              ? '${(p['discount_percent'] as num).toStringAsFixed(0)}% OFF'
+                                              : 'SALE',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontFamily: 'Satoshi',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ]),
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: Column(
@@ -348,12 +375,34 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 4),
-                                      PriceText(
-                                        price: double.tryParse(
-                                                p['price']?.toString() ??
-                                                    '0') ??
-                                            0.0,
-                                      ),
+                                      if (p['is_on_sale'] == true &&
+                                          p['sale_price'] != null) ...[
+                                        Text(
+                                          'R${(p['price'] as num? ?? 0).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontFamily: 'Satoshi',
+                                            fontSize: 11,
+                                            color: AppColors.textTertiary,
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                        Text(
+                                          'R${(p['sale_price'] as num).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontFamily: 'Satoshi',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                            color: AppColors.error,
+                                          ),
+                                        ),
+                                      ] else
+                                        PriceText(
+                                          price: double.tryParse(
+                                                  p['price']?.toString() ??
+                                                      '0') ??
+                                              0.0,
+                                        ),
                                     ],
                                   ),
                                 ),

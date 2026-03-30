@@ -130,9 +130,32 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      PriceText(
-                                          price: (p['price'] ?? 0)
-                                              .toDouble()),
+                                      if (p['is_on_sale'] == true &&
+                                          p['sale_price'] != null) ...[
+                                        Text(
+                                          'R${((p['price'] ?? 0) as num).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontFamily: 'Satoshi',
+                                            fontSize: 12,
+                                            color: AppColors.textTertiary,
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'R${(p['sale_price'] as num).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontFamily: 'Satoshi',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            color: AppColors.error,
+                                          ),
+                                        ),
+                                      ] else
+                                        PriceText(
+                                            price: (p['price'] ?? 0)
+                                                .toDouble()),
                                       const SizedBox(width: 8),
                                       Text(
                                         'Stock: ${p['stock_quantity'] ?? 0}',
@@ -143,8 +166,29 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 4),
-                                  StatusChip(
-                                      status: p['status'] ?? 'pending'),
+                                  Row(children: [
+                                    StatusChip(
+                                        status: p['status'] ?? 'pending'),
+                                    if (p['is_on_sale'] == true) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.error,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: const Text('SALE',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontFamily: 'Satoshi',
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 9,
+                                            )),
+                                      ),
+                                    ],
+                                  ]),
                                 ],
                               ),
                             ),
