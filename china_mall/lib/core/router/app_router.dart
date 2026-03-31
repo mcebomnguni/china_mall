@@ -31,6 +31,11 @@ import '../../features/vendor/screens/vendor_type_screen.dart';
 import '../../features/vendor/screens/vendor_onboarding_formal_screen.dart';
 import '../../features/vendor/screens/vendor_onboarding_informal_screen.dart';
 import '../../features/courier/screens/courier_dashboard_screen.dart';
+import '../../features/courier/screens/courier_home_screen.dart';
+import '../../features/courier/screens/pickup_assignments_screen.dart';
+import '../../features/courier/screens/pickup_detail_screen.dart';
+import '../../features/courier/screens/active_deliveries_screen.dart';
+import '../../features/courier/screens/delivery_handoff_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../main_shell.dart';
 import '../../core/widgets/error_widgets.dart';
@@ -184,7 +189,21 @@ GoRouter createRouter(AuthProvider auth) {
               builder: (_, __) => const AddProductScreen()),
           GoRoute(
               path: '/courier',
-              builder: (_, __) => const CourierDashboardScreen()),
+              builder: (_, __) => const CourierHomeScreen()),
+          GoRoute(
+              path: '/courier/pickups',
+              builder: (_, __) => const PickupAssignmentsScreen()),
+          GoRoute(
+              path: '/courier/pickup/:id',
+              builder: (_, state) => PickupDetailScreen(
+                  assignmentId: int.parse(state.pathParameters['id']!))),
+          GoRoute(
+              path: '/courier/deliveries',
+              builder: (_, __) => const ActiveDeliveriesScreen()),
+          GoRoute(
+              path: '/courier/deliver/:id',
+              builder: (_, state) => DeliveryHandoffScreen(
+                  deliveryId: int.parse(state.pathParameters['id']!))),
           GoRoute(
               path: '/admin',
               builder: (_, __) => const AdminDashboardScreen()),

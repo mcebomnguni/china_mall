@@ -26,8 +26,9 @@ class MainShell extends StatelessWidget {
   ];
 
   static const _courierTabs = [
-    _TabItem(icon: CupertinoIcons.house_fill,      label: 'Main',     path: '/'),
-    _TabItem(icon: CupertinoIcons.car_fill,        label: 'Jobs',     path: '/courier'),
+    _TabItem(icon: CupertinoIcons.house_fill,      label: 'Home',     path: '/courier'),
+    _TabItem(icon: Icons.inventory_2_outlined,     label: 'Pickups',  path: '/courier/pickups'),
+    _TabItem(icon: Icons.local_shipping_outlined,  label: 'Deliver',  path: '/courier/deliveries'),
     _TabItem(icon: CupertinoIcons.person_fill,     label: 'You',      path: '/profile'),
   ];
 
@@ -56,11 +57,15 @@ class MainShell extends StatelessWidget {
     }
 
     int currentIndex = 0;
+    int bestMatchLength = 0;
     for (int i = 0; i < tabs.length; i++) {
-      if (tabs[i].path == '/') {
-        if (location == '/') currentIndex = i;
-      } else if (location.startsWith(tabs[i].path)) {
-        currentIndex = i;
+      if (tabs[i].path == '/' && location == '/') {
+        currentIndex = 0;
+      } else if (tabs[i].path != '/' && location.startsWith(tabs[i].path)) {
+        if (tabs[i].path.length > bestMatchLength) {
+          bestMatchLength = tabs[i].path.length;
+          currentIndex = i;
+        }
       }
     }
 
