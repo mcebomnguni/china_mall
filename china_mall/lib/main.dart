@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
@@ -16,6 +17,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/cart/providers/cart_provider.dart';
 import 'features/products/providers/products_provider.dart';
 import 'features/orders/providers/orders_provider.dart';
+import 'features/support/providers/support_provider.dart';
 import 'core/services/supabase_service.dart';
 
 void main() async {
@@ -81,6 +83,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => CartProvider()),
           ChangeNotifierProvider(create: (_) => ProductsProvider()),
           ChangeNotifierProvider(create: (_) => OrdersProvider()),
+          ChangeNotifierProvider(create: (_) => SupportProvider()),
         ],
         child: const ChinaStallApp(),
       ),
@@ -141,14 +144,22 @@ void _applySystemUI({required bool dark}) {
   ));
 }
 
-class ChinaStallApp extends StatelessWidget {
+class ChinaStallApp extends StatefulWidget {
   const ChinaStallApp({super.key});
+
+  @override
+  State<ChinaStallApp> createState() => _ChinaStallAppState();
+}
+
+class _ChinaStallAppState extends State<ChinaStallApp> {
+  GoRouter? _router;
 
   @override
   Widget build(BuildContext context) {
     final auth          = context.watch<AuthProvider>();
     final themeNotifier = context.watch<ThemeNotifier>();
-    final router        = createRouter(auth);
+    // Create router once — GoRouter.refreshListenable handles auth changes
+    _router ??= createRouter(auth);
 
     _applySystemUI(dark: themeNotifier.isDark);
 
@@ -158,7 +169,7 @@ class ChinaStallApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeNotifier.mode,
-      routerConfig: router,
+      routerConfig: _router!,
       builder: (context, child) {
         return OfflineWrapper(
           child: SessionActivityDetector(

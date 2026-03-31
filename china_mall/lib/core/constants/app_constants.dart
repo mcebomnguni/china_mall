@@ -1,18 +1,41 @@
 class AppConstants {
-  // Category slugs
-  static const List<Map<String, String>> categories = [
-    {'slug': 'clothing', 'label': 'Clothing', 'icon': '👘'},
-    {'slug': 'shoes', 'label': 'Shoes', 'icon': '👟'},
-    {'slug': 'blankets', 'label': 'Blankets', 'icon': '🛏'},
-    {'slug': 'furniture', 'label': 'Furniture', 'icon': '🛋'},
-    {'slug': 'carpets', 'label': 'Carpets', 'icon': '🪞'},
-    {'slug': 'accessories', 'label': 'Accessories', 'icon': '💍'},
-    {'slug': 'bags', 'label': 'Bags', 'icon': '👜'},
-    {'slug': 'toys', 'label': 'Toys', 'icon': '🧸'},
-    {'slug': 'kitchen', 'label': 'Kitchen', 'icon': '🍳'},
+  // ── Top-level category groups ──────────────────────────────────────────────
+  static const List<Map<String, String>> categoryGroups = [
+    {'slug': 'clothes',     'label': 'Clothes',     'icon': '👗'},
+    {'slug': 'household',   'label': 'Household',   'icon': '🏠'},
     {'slug': 'electronics', 'label': 'Electronics', 'icon': '📱'},
-    {'slug': 'sportswear', 'label': 'Sportswear', 'icon': '⚽'},
   ];
+
+  // ── Sub-categories (ordered by parent group) ───────────────────────────────
+  // Each entry includes 'parent' mapping to a categoryGroups slug.
+  static const List<Map<String, String>> categories = [
+    // Clothes
+    {'slug': 'clothing',    'label': 'Clothing',    'icon': '👘', 'parent': 'clothes'},
+    {'slug': 'shoes',       'label': 'Shoes',       'icon': '👟', 'parent': 'clothes'},
+    {'slug': 'accessories', 'label': 'Accessories', 'icon': '💍', 'parent': 'clothes'},
+    {'slug': 'sportswear',  'label': 'Sportswear',  'icon': '⚽', 'parent': 'clothes'},
+    {'slug': 'bags',        'label': 'Bags',        'icon': '👜', 'parent': 'clothes'},
+    // Household
+    {'slug': 'blankets',    'label': 'Blankets',    'icon': '🛏', 'parent': 'household'},
+    {'slug': 'furniture',   'label': 'Furniture',   'icon': '🛋', 'parent': 'household'},
+    {'slug': 'carpets',     'label': 'Carpets',     'icon': '🪞', 'parent': 'household'},
+    {'slug': 'kitchen',     'label': 'Kitchen',     'icon': '🍳', 'parent': 'household'},
+    {'slug': 'toys',        'label': 'Toys',        'icon': '🧸', 'parent': 'household'},
+    // Electronics
+    {'slug': 'electronics', 'label': 'Electronics', 'icon': '📱', 'parent': 'electronics'},
+  ];
+
+  /// Returns the parent group slug for a given sub-category slug.
+  static String? categoryParent(String slug) {
+    for (final c in categories) {
+      if (c['slug'] == slug) return c['parent'];
+    }
+    return null;
+  }
+
+  /// Returns all sub-categories under a given parent group slug.
+  static List<Map<String, String>> categoriesForParent(String parentSlug) =>
+      categories.where((c) => c['parent'] == parentSlug).toList();
 
   // Order statuses with labels
   static const Map<String, String> orderStatusLabels = {
@@ -75,6 +98,7 @@ class AppConstants {
   static const String placeholderAvatar =
       'https://via.placeholder.com/100x100?text=User';
 }
+
 class ApiConstants {
   // ── Change this to your deployed Django URL in production ──
   static const String baseUrl = 'http://10.0.2.2:8000/api';

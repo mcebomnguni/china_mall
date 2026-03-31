@@ -487,35 +487,41 @@ class _EditProductScreenState extends State<EditProductScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Expanded(
-            child: TextFormField(
-              controller: _colourInputCtrl,
-              style:
-                  const TextStyle(fontFamily: 'Satoshi', fontSize: 14),
-              decoration: const InputDecoration(
-                hintText: 'e.g. Red, Navy Blue',
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _colourInputCtrl,
+                style:
+                    const TextStyle(fontFamily: 'Satoshi', fontSize: 14),
+                decoration: const InputDecoration(
+                  hintText: 'e.g. Red, Navy Blue',
+                ),
+                onFieldSubmitted: (_) => _addColour(),
               ),
-              onFieldSubmitted: (_) => _addColour(),
             ),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: _addColour,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14),
+            const SizedBox(width: 10),
+            SizedBox(
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _addColour,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 0),
+                ),
+                child: const Text('Add',
+                    style: TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontWeight: FontWeight.w700)),
+              ),
             ),
-            child: const Text('Add',
-                style: TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontWeight: FontWeight.w700)),
-          ),
-        ]),
+          ],
+        ),
         if (_colours.isNotEmpty) ...[
           const SizedBox(height: 10),
           Wrap(
@@ -678,30 +684,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
+              CategoryPickerField(
                 value: _category,
-                decoration: InputDecoration(
-                  labelText: 'Category *',
-                  filled: true,
-                  fillColor: AppColors.surfaceVariant,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: AppColors.border)),
-                ),
-                items: AppConstants.categories
-                    .map((c) => DropdownMenuItem(
-                          value: c['slug'],
-                          child: Text('${c['icon']} ${c['label']}',
-                              style: const TextStyle(
-                                  fontFamily: 'Satoshi', fontSize: 14)),
-                        ))
-                    .toList(),
                 onChanged: (v) => setState(() {
-                  _category = v ?? 'clothing';
+                  _category = v;
                   _selectedSizes.clear();
                 }),
               ),

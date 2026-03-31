@@ -271,7 +271,24 @@ class ApiService {
     return _post('/api/stores/$id/reviews/', d);
   }
 
-  static Future<ApiResponse> getMyStore() => _get('/api/stores/my-store/');
+  static Future<ApiResponse> getMyStore() async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+        final store = await SupabaseService.client
+            .from('stores')
+            .select('*')
+            .eq('owner', user.id)
+            .maybeSingle();
+        if (store != null) return ApiResponse(200, store);
+        return ApiResponse(404, {'error': 'No store found'});
+      } catch (e) {
+        if (kDebugMode) debugPrint('getMyStore error: $e');
+      }
+    }
+    return _get('/api/stores/my-store/');
+  }
   static Future<ApiResponse> updateMyStore(Map d) => _put('/api/stores/my-store/', d);
   static Future<ApiResponse> createStore(Map d) => _post('/api/stores/create/', d);
   static Future<ApiResponse> getPendingStores() => _get('/api/stores/pending/');
@@ -341,6 +358,31 @@ class ApiService {
               .where((p) => p['category']?['slug'] == category)
               .toList();
         }
+
+        // Ad boost: stores with active campaigns sort to top
+        try {
+          final now = DateTime.now().toIso8601String();
+          final boostedRows = await SupabaseService.client
+              .from('ad_campaigns')
+              .select('store_id')
+              .eq('status', 'active')
+              .lte('starts_at', now);
+          final boostedStoreIds = (boostedRows as List)
+              .map((r) => r['store_id'] as int)
+              .toSet();
+          if (boostedStoreIds.isNotEmpty) {
+            final boosted = result
+                .where((p) =>
+                    boostedStoreIds.contains(p['store_id'] as int? ?? -1))
+                .toList();
+            final rest = result
+                .where((p) =>
+                    !boostedStoreIds.contains(p['store_id'] as int? ?? -1))
+                .toList();
+            result = [...boosted, ...rest];
+          }
+        } catch (_) {}
+
         return ApiResponse(200, result);
       } catch (e) {
         if (kDebugMode) debugPrint('getProducts Supabase error: $e');
@@ -599,7 +641,7 @@ class ApiService {
               .from('product_images')
               .delete()
               .eq('product_id', id)
-              .inFilter('url', removedUrls.cast<String>());
+              .in_('url', removedUrls.cast<String>());
         }
 
         // Add new images
@@ -651,6 +693,32 @@ class ApiService {
       }
     }
     return _delete('/api/products/vendor/$id/');
+  }
+
+  // ── S6: Update stock directly (vendor manual restock) ────────────────────
+  static Future<ApiResponse> updateProductStock(int productId, int qty) async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+        final updated = await SupabaseService.client
+            .from('products')
+            .update({
+              'stock_quantity': qty,
+              // Re-activate if restocking from zero
+              if (qty > 0) 'is_active': true,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', productId)
+            .select()
+            .single();
+        return ApiResponse(200, updated);
+      } catch (e) {
+        if (kDebugMode) debugPrint('updateProductStock error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
   }
 
   static Future<ApiResponse> getPendingProducts() => _get('/api/products/pending/');
@@ -717,6 +785,407 @@ class ApiService {
   static Future<ApiResponse> calculateDelivery(double sub, String method) =>
       _post('/api/analytics/delivery-pricing/',
           {'subtotal': sub, 'delivery_method': method});
+
+  // ── S3: Ad Campaigns ──────────────────────────────────────────────────────
+  static Future<ApiResponse> getMyAdCampaigns() async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+        final store = await SupabaseService.client
+            .from('stores').select('id').eq('owner', user.id).maybeSingle();
+        if (store == null) return ApiResponse(200, <dynamic>[]);
+        final campaigns = await SupabaseService.client
+            .from('ad_campaigns')
+            .select('*')
+            .eq('store_id', store['id'])
+            .order('created_at', ascending: false);
+        return ApiResponse(200, campaigns);
+      } catch (e) {
+        if (kDebugMode) debugPrint('getMyAdCampaigns error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  static Future<ApiResponse> createAdCampaign(Map d) async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+        final store = await SupabaseService.client
+            .from('stores').select('id').eq('owner', user.id).maybeSingle();
+        if (store == null) return ApiResponse(400, {'error': 'No store found'});
+        final targetCustomers = (d['target_customers'] as num? ?? 100).toInt();
+        // R10 per 100 customers
+        final budget = (targetCustomers / 100) * 10.0;
+        // Expires after proportional days (1 week per 100 customers, min 7 days)
+        final days = ((targetCustomers / 100) * 7).ceil().clamp(7, 365);
+        final campaign = await SupabaseService.client
+            .from('ad_campaigns')
+            .insert({
+              'store_id': store['id'],
+              'target_customers': targetCustomers,
+              'budget_rands': budget,
+              'customers_reached': 0,
+              'status': 'active',
+              'starts_at': DateTime.now().toIso8601String(),
+              'expires_at': DateTime.now()
+                  .add(Duration(days: days))
+                  .toIso8601String(),
+            })
+            .select()
+            .single();
+        return ApiResponse(201, campaign);
+      } catch (e) {
+        if (kDebugMode) debugPrint('createAdCampaign error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  static Future<ApiResponse> cancelAdCampaign(int id) async {
+    if (SupabaseService.isReady) {
+      try {
+        await SupabaseService.client
+            .from('ad_campaigns')
+            .update({'status': 'cancelled'})
+            .eq('id', id);
+        return ApiResponse(200, {'status': 'cancelled'});
+      } catch (e) {
+        if (kDebugMode) debugPrint('cancelAdCampaign error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  // ── S4: Store Analytics ───────────────────────────────────────────────────
+  static Future<bool> checkAnalyticsSubscription() async {
+    if (!SupabaseService.isReady) return false;
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) return false;
+      final store = await SupabaseService.client
+          .from('stores').select('id').eq('owner', user.id).maybeSingle();
+      if (store == null) return false;
+      final sub = await SupabaseService.client
+          .from('analytics_subscriptions')
+          .select('id, expires_at')
+          .eq('store_id', store['id'])
+          .eq('status', 'active')
+          .maybeSingle();
+      if (sub == null) return false;
+      final exp = DateTime.tryParse(sub['expires_at'] ?? '');
+      return exp != null && exp.isAfter(DateTime.now());
+    } catch (e) {
+      if (kDebugMode) debugPrint('checkAnalyticsSubscription error: $e');
+      return false;
+    }
+  }
+
+  static Future<ApiResponse> subscribeToAnalytics() async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+        final store = await SupabaseService.client
+            .from('stores').select('id').eq('owner', user.id).maybeSingle();
+        if (store == null) return ApiResponse(400, {'error': 'No store found'});
+        final now = DateTime.now();
+        final sub = await SupabaseService.client
+            .from('analytics_subscriptions')
+            .insert({
+              'store_id': store['id'],
+              'status': 'active',
+              'amount_paid': 250,
+              'starts_at': now.toIso8601String(),
+              'expires_at': now.add(const Duration(days: 30)).toIso8601String(),
+            })
+            .select()
+            .single();
+        return ApiResponse(201, sub);
+      } catch (e) {
+        if (kDebugMode) debugPrint('subscribeToAnalytics error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  /// period: 'daily' | 'weekly' | 'monthly'
+  static Future<ApiResponse> getVendorAnalytics({String period = 'monthly'}) async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+        final store = await SupabaseService.client
+            .from('stores').select('id').eq('owner', user.id).maybeSingle();
+        if (store == null) return ApiResponse(200, {'sales': [], 'products': []});
+
+        final storeId = store['id'];
+        // Get all product IDs for this store
+        final products = await SupabaseService.client
+            .from('products')
+            .select('id, name, price, is_on_sale, sale_price')
+            .eq('store_id', storeId);
+
+        final productIds =
+            (products as List).map((p) => p['id'] as int).toList();
+        if (productIds.isEmpty) {
+          return ApiResponse(200, {'sales': [], 'products': []});
+        }
+
+        // Cut-off date based on period
+        final now = DateTime.now();
+        late DateTime since;
+        if (period == 'daily') {
+          since = now.subtract(const Duration(days: 1));
+        } else if (period == 'weekly') {
+          since = now.subtract(const Duration(days: 7));
+        } else {
+          since = now.subtract(const Duration(days: 30));
+        }
+
+        // Get order_items for those products within the period,
+        // joined to delivered/picked_up orders
+        final orderItems = await SupabaseService.client
+            .from('order_items')
+            .select('*, orders(id, status, created_at, total_amount)')
+            .in_('product_id', productIds)
+            .gte('orders.created_at', since.toIso8601String());
+
+        final items = (orderItems as List).where((item) {
+          final orderStatus = item['orders']?['status'] ?? '';
+          return ['delivered', 'picked_up', 'in_transit',
+                  'out_for_delivery', 'awaiting_pickup', 'processing',
+                  'payment_confirmed']
+              .contains(orderStatus);
+        }).toList();
+
+        // Aggregate per product
+        final Map<int, Map<String, dynamic>> productStats = {};
+        for (final item in items) {
+          final pid = item['product_id'] as int;
+          final qty = (item['quantity'] as num? ?? 1).toInt();
+          final price = (item['price'] as num? ?? 0).toDouble();
+          if (!productStats.containsKey(pid)) {
+            final prod = (products as List)
+                .firstWhere((p) => p['id'] == pid, orElse: () => {});
+            productStats[pid] = {
+              'product_id': pid,
+              'name': prod['name'] ?? 'Product #$pid',
+              'units_sold': 0,
+              'revenue': 0.0,
+              'orders': 0,
+            };
+          }
+          productStats[pid]!['units_sold'] =
+              (productStats[pid]!['units_sold'] as int) + qty;
+          productStats[pid]!['revenue'] =
+              (productStats[pid]!['revenue'] as double) + (price * qty);
+          productStats[pid]!['orders'] =
+              (productStats[pid]!['orders'] as int) + 1;
+        }
+
+        final productList = productStats.values.toList()
+          ..sort((a, b) =>
+              (b['revenue'] as double).compareTo(a['revenue'] as double));
+
+        // Build sales timeline (group by date)
+        final Map<String, double> timeline = {};
+        for (final item in items) {
+          final createdAt =
+              item['orders']?['created_at']?.toString() ?? '';
+          String key;
+          if (period == 'daily') {
+            key = createdAt.length >= 16 ? createdAt.substring(11, 16) : createdAt;
+          } else if (period == 'weekly') {
+            key = createdAt.length >= 10 ? createdAt.substring(0, 10) : createdAt;
+          } else {
+            key = createdAt.length >= 7 ? createdAt.substring(0, 7) : createdAt;
+          }
+          final price = (item['price'] as num? ?? 0).toDouble();
+          final qty = (item['quantity'] as num? ?? 1).toDouble();
+          timeline[key] = (timeline[key] ?? 0) + (price * qty);
+        }
+
+        final salesList = timeline.entries
+            .map((e) => {'period': e.key, 'revenue': e.value})
+            .toList()
+          ..sort((a, b) => (a['period'] as String)
+              .compareTo(b['period'] as String));
+
+        final totalRevenue = items.fold<double>(0, (sum, item) {
+          final price = (item['price'] as num? ?? 0).toDouble();
+          final qty = (item['quantity'] as num? ?? 1).toDouble();
+          return sum + (price * qty);
+        });
+
+        return ApiResponse(200, {
+          'sales': salesList,
+          'products': productList,
+          'total_revenue': totalRevenue,
+          'total_orders': items.length,
+          'period': period,
+        });
+      } catch (e) {
+        if (kDebugMode) debugPrint('getVendorAnalytics error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  // ── S5: Vendor Order Fulfillment ──────────────────────────────────────────
+  static Future<ApiResponse> getVendorOrdersSupabase({String? status}) async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+
+        // Step 1: get vendor's store
+        final store = await SupabaseService.client
+            .from('stores').select('id').eq('owner', user.id).maybeSingle();
+        if (store == null) return ApiResponse(200, <dynamic>[]);
+        final storeId = store['id'] as int;
+
+        // Step 2: get product IDs for this store
+        final products = await SupabaseService.client
+            .from('products').select('id').eq('store_id', storeId);
+        final productIds =
+            (products as List).map((p) => p['id'] as int).toList();
+        if (productIds.isEmpty) return ApiResponse(200, <dynamic>[]);
+
+        // Step 3: get order_ids that contain those products
+        final orderItemRows = await SupabaseService.client
+            .from('order_items')
+            .select('order_id')
+            .in_('product_id', productIds);
+        final orderIds = (orderItemRows as List)
+            .map((r) => r['order_id'] as int)
+            .toSet()
+            .toList();
+        if (orderIds.isEmpty) return ApiResponse(200, <dynamic>[]);
+
+        // Step 4: load orders
+        var query = SupabaseService.client
+            .from('orders')
+            .select('*, profiles(full_name, phone_number)')
+            .in_('id', orderIds);
+        if (status != null && status.isNotEmpty) {
+          query = query.eq('status', status);
+        }
+        final orders = await query.order('created_at', ascending: false);
+
+        // Enrich with item count
+        final enriched = await Future.wait(
+          (orders as List).map((order) async {
+            final items = await SupabaseService.client
+                .from('order_items')
+                .select('id')
+                .eq('order_id', order['id'])
+                .in_('product_id', productIds);
+            final profile = order['profiles'];
+            return {
+              ...Map<String, dynamic>.from(order),
+              'buyer_name': profile?['full_name'] ?? 'Customer',
+              'item_count': (items as List).length,
+            };
+          }),
+        );
+
+        return ApiResponse(200, enriched);
+      } catch (e) {
+        if (kDebugMode) debugPrint('getVendorOrdersSupabase error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  static Future<ApiResponse> getVendorOrderDetail(int orderId) async {
+    if (SupabaseService.isReady) {
+      try {
+        final user = SupabaseService.client.auth.currentUser;
+        if (user == null) return ApiResponse(401, {'error': 'Not logged in'});
+
+        final order = await SupabaseService.client
+            .from('orders')
+            .select('*, profiles(full_name, phone_number, email), addresses(line1, line2, city, province, postal_code)')
+            .eq('id', orderId)
+            .maybeSingle();
+        if (order == null) return ApiResponse(404, {'error': 'Order not found'});
+
+        final items = await SupabaseService.client
+            .from('order_items')
+            .select('*, products(id, name, price, sale_price, is_on_sale, product_images(url, ordinal))')
+            .eq('order_id', orderId);
+
+        final mappedItems = (items as List).map((item) {
+          final product = Map<String, dynamic>.from(item['products'] ?? {});
+          final rawImages = product['product_images'];
+          String? imageUrl;
+          if (rawImages is List && rawImages.isNotEmpty) {
+            final sorted = List<Map>.from(rawImages)
+              ..sort((a, b) => (a['ordinal'] ?? 0).compareTo(b['ordinal'] ?? 0));
+            imageUrl = sorted.first['url'];
+          }
+          return {
+            ...Map<String, dynamic>.from(item),
+            'product_name': product['name'] ?? '',
+            'product_image': imageUrl,
+          };
+        }).toList();
+
+        final profile = order['profiles'];
+        final address = order['addresses'];
+        return ApiResponse(200, {
+          ...Map<String, dynamic>.from(order),
+          'buyer_name': profile?['full_name'] ?? 'Customer',
+          'buyer_phone': profile?['phone_number'] ?? '',
+          'buyer_email': profile?['email'] ?? '',
+          'delivery_address': address != null
+              ? '${address['line1'] ?? ''}, ${address['city'] ?? ''}'
+              : null,
+          'items': mappedItems,
+        });
+      } catch (e) {
+        if (kDebugMode) debugPrint('getVendorOrderDetail error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
+
+  static Future<ApiResponse> updateVendorOrderStatus(
+      int orderId, String newStatus, {String? handoffCode}) async {
+    if (SupabaseService.isReady) {
+      try {
+        final now = DateTime.now().toIso8601String();
+        final updates = <String, dynamic>{
+          'status': newStatus,
+          'updated_at': now,
+          if (newStatus == 'processing') 'confirmed_at': now,
+          if (newStatus == 'awaiting_pickup') 'packed_at': now,
+          if (handoffCode != null) 'handoff_code': handoffCode,
+        };
+        final updated = await SupabaseService.client
+            .from('orders')
+            .update(updates)
+            .eq('id', orderId)
+            .select()
+            .single();
+        return ApiResponse(200, updated);
+      } catch (e) {
+        if (kDebugMode) debugPrint('updateVendorOrderStatus error: $e');
+        return ApiResponse(500, {'error': e.toString()});
+      }
+    }
+    return ApiResponse(503, {'error': 'Offline'});
+  }
 }
 
 class ApiResponse {

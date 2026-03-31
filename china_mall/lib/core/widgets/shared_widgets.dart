@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 import '../constants/app_constants.dart';
 
@@ -432,6 +433,174 @@ class _Btn extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, size: 14, color: onTap != null ? AppColors.textPrimary : AppColors.textTertiary),
+      ),
+    );
+  }
+}
+
+// ─── Category Picker Field (grouped bottom sheet) ─────────────────────────────
+/// A tappable form-field replacement for the category dropdown.
+/// Shows categories grouped under Clothes / Household / Electronics.
+class CategoryPickerField extends StatelessWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const CategoryPickerField({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  Map<String, String>? get _current => AppConstants.categories
+      .cast<Map<String, String>?>()
+      .firstWhere((c) => c?['slug'] == value, orElse: () => null);
+
+  Future<void> _open(BuildContext context) async {
+    final String currentValue = value;
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.65,
+        maxChildSize: 0.9,
+        builder: (ctx, scroll) => Column(
+          children: [
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: const Text(
+                  'Select Category',
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                controller: scroll,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: AppConstants.categoryGroups.map((group) {
+                  final subs =
+                      AppConstants.categoriesForParent(group['slug']!);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16, bottom: 8),
+                        child: Text(
+                          '${group['icon']} ${group['label']}',
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontWeight: FontWeight.w900,
+                            fontSize: 11,
+                            letterSpacing: 1.2,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: subs.map((sub) {
+                          final isSelected = sub['slug'] == currentValue;
+                          return GestureDetector(
+                            onTap: () => Navigator.pop(ctx, sub['slug']),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.border,
+                                ),
+                              ),
+                              child: Text(
+                                '${sub['icon']} ${sub['label']}',
+                                style: TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+    if (result != null) onChanged(result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cat = _current;
+    return GestureDetector(
+      onTap: () => _open(context),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Text(
+              cat != null
+                  ? '${cat['icon']} ${cat['label']}'
+                  : 'Select Category',
+              style: TextStyle(
+                fontFamily: 'Satoshi',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: cat != null
+                    ? AppColors.textPrimary
+                    : AppColors.textTertiary,
+              ),
+            ),
+            const Spacer(),
+            const Icon(CupertinoIcons.chevron_down,
+                size: 14, color: AppColors.textTertiary),
+          ],
+        ),
       ),
     );
   }

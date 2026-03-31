@@ -390,6 +390,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         children: [
                           _MenuItem(
+                            icon: CupertinoIcons.ticket,
+                            label: 'My Support Tickets',
+                            onTap: () => context.push('/support'),
+                          ),
+                          _Divider(),
+                          _MenuItem(
                             icon: CupertinoIcons.question_circle,
                             label: 'Help & Support',
                             onTap: () => _push(const HelpSupportScreen()),

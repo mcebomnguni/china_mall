@@ -38,8 +38,16 @@ import '../../features/auth/screens/onboarding_screen.dart';
 import '../../features/vendor/screens/register_store_screen.dart';
 import '../../features/vendor/screens/edit_product_screen.dart';
 import '../../features/vendor/screens/manage_store_screen.dart';
+import '../../features/vendor/screens/vendor_ads_screen.dart';
+import '../../features/vendor/screens/vendor_analytics_screen.dart';
+import '../../features/vendor/screens/vendor_order_detail_screen.dart';
 import '../../features/products/screens/search_screen.dart';
 import '../../features/profile/screens/notifications_screen.dart';
+import '../../features/support/screens/support_tickets_screen.dart';
+import '../../features/support/screens/create_ticket_screen.dart';
+import '../../features/support/screens/ticket_chat_screen.dart';
+import '../../features/auth/screens/security_setup_screen.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 
 final _rootNavKey = GlobalKey<NavigatorState>();
 final _shellNavKey = GlobalKey<NavigatorState>();
@@ -65,7 +73,7 @@ GoRouter createRouter(AuthProvider auth) {
       }
 
       // 3. Define routes that anyone can see
-      final publicRoutes = ['/splash', '/login', '/register', '/onboarding'];
+      final publicRoutes = ['/splash', '/login', '/register', '/onboarding', '/security-setup', '/forgot-password'];
 
       // 4. If NOT logged in, and trying to go to a private area → Force Login
       if (status == AuthStatus.unauthenticated) {
@@ -78,7 +86,15 @@ GoRouter createRouter(AuthProvider auth) {
         }
       }
 
-      // 5. If ALREADY logged in, don't let them see the login/register/splash pages
+      // 5. If authenticated, check if security setup is needed
+      if (status == AuthStatus.authenticated && auth.needsSecuritySetup && location != '/security-setup') {
+        // Only prompt once per login — skip if coming from setup
+        if (publicRoutes.contains(location)) {
+          return '/security-setup';
+        }
+      }
+
+      // 6. If ALREADY logged in, don't let them see the login/register/splash pages
       if (status == AuthStatus.authenticated && publicRoutes.contains(location)) {
         return '/';
       }
@@ -101,6 +117,14 @@ GoRouter createRouter(AuthProvider auth) {
       GoRoute(
         path: '/register',
         builder: (_, __) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/security-setup',
+        builder: (_, __) => const SecuritySetupScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavKey,
@@ -205,6 +229,16 @@ GoRouter createRouter(AuthProvider auth) {
               builder: (_, state) => EditProductScreen(
                   productId: int.parse(state.pathParameters['id']!))),
           GoRoute(
+              path: '/vendor/orders/:id',
+              builder: (_, state) => VendorOrderDetailScreen(
+                  orderId: int.parse(state.pathParameters['id']!))),
+          GoRoute(
+              path: '/vendor/ads',
+              builder: (_, __) => const VendorAdsScreen()),
+          GoRoute(
+              path: '/vendor/analytics',
+              builder: (_, __) => const VendorAnalyticsScreen()),
+          GoRoute(
               path: '/search',
               builder: (_, __) => const SearchScreen()),
           GoRoute(
@@ -213,6 +247,16 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
               path: '/notifications',
               builder: (_, __) => const NotificationsScreen()),
+          GoRoute(
+              path: '/support',
+              builder: (_, __) => const SupportTicketsScreen()),
+          GoRoute(
+              path: '/support/new',
+              builder: (_, __) => const CreateTicketScreen()),
+          GoRoute(
+              path: '/support/:id',
+              builder: (_, state) => TicketChatScreen(
+                  ticketId: int.parse(state.pathParameters['id']!))),
         ],
       ),
     ],

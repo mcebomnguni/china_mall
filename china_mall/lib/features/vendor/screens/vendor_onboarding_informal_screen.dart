@@ -11,7 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'vendor_onboarding_formal_screen.dart'
-    show _DocUploadTile, _InfoBox, _SectionHeader;
+    show VendorDocUploadTile, VendorInfoBox, VendorSectionHeader;
 
 class VendorOnboardingInformalScreen extends StatefulWidget {
   const VendorOnboardingInformalScreen({super.key});
@@ -250,7 +250,7 @@ class _VendorOnboardingInformalScreenState
   }
 
   List<Widget> _buildStep0() => [
-        _SectionHeader(
+        VendorSectionHeader(
             icon: CupertinoIcons.person_fill,
             title: 'Contact Information',
             color: AppColors.courierColor),
@@ -308,7 +308,7 @@ class _VendorOnboardingInformalScreenState
       ];
 
   List<Widget> _buildStep1() => [
-        _SectionHeader(
+        VendorSectionHeader(
             icon: CupertinoIcons.doc_fill,
             title: 'Required Documents',
             color: AppColors.courierColor),
@@ -321,7 +321,7 @@ class _VendorOnboardingInformalScreenState
               color: AppColors.textSecondary),
         ),
         const SizedBox(height: 20),
-        _DocUploadTile(
+        VendorDocUploadTile(
           label: 'ID Document',
           hint: 'Owner\'s identity document',
           required: true,
@@ -330,7 +330,7 @@ class _VendorOnboardingInformalScreenState
           onRemove: () => setState(() => _idFile = null),
         ),
         const SizedBox(height: 12),
-        _DocUploadTile(
+        VendorDocUploadTile(
           label: 'Trading / Vendor Permit',
           required: true,
           file: _permitFile,
@@ -338,7 +338,7 @@ class _VendorOnboardingInformalScreenState
           onRemove: () => setState(() => _permitFile = null),
         ),
         const SizedBox(height: 12),
-        _DocUploadTile(
+        VendorDocUploadTile(
           label: 'Affidavit',
           hint: 'Sworn statement confirming business legitimacy',
           required: true,
@@ -347,7 +347,7 @@ class _VendorOnboardingInformalScreenState
           onRemove: () => setState(() => _affidavitFile = null),
         ),
         const SizedBox(height: 12),
-        _DocUploadTile(
+        VendorDocUploadTile(
           label: 'Proof of Bank Account',
           hint: 'Must match owner\'s ID name',
           required: true,
@@ -359,7 +359,7 @@ class _VendorOnboardingInformalScreenState
       ];
 
   List<Widget> _buildStep2() => [
-        _SectionHeader(
+        VendorSectionHeader(
             icon: CupertinoIcons.person_2_fill,
             title: 'Workers',
             color: AppColors.courierColor),
@@ -374,7 +374,7 @@ class _VendorOnboardingInformalScreenState
         ),
         const SizedBox(height: 20),
         if (_workers.isEmpty)
-          _InfoBox(text: 'No workers added. You can skip this step or add workers below.'),
+          VendorInfoBox(text: 'No workers added. You can skip this step or add workers below.'),
         const SizedBox(height: 8),
         ..._workers.asMap().entries.map((entry) {
           final index = entry.key;
@@ -515,7 +515,7 @@ class _WorkerForm extends StatelessWidget {
                     color: AppColors.textTertiary)),
           ),
           const SizedBox(height: 10),
-          _DocUploadTile(
+          VendorDocUploadTile(
             label: 'Passport / ID Document',
             required: false,
             file: worker.idFile,

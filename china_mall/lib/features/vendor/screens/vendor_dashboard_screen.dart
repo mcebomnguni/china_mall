@@ -112,8 +112,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen>
                 _OverviewTab(
                   store: _store,
                   dashboard: _dashboard,
-                  onAddProduct: () => context.go('/vendor/products/add'),
-                  onViewOrders: () => context.go('/orders'),
+                  onAddProduct: () => context.push('/vendor/products/add'),
+                  onViewOrders: () => context.go('/vendor/orders'),
+                  onMyAds: () => context.go('/vendor/ads'),
+                  onAnalytics: () => context.go('/vendor/analytics'),
                   onRefresh: _loadData,
                 ),
                 _EarningsTab(earnings: _earnings),
@@ -131,13 +133,17 @@ class _OverviewTab extends StatelessWidget {
   final Map<String, dynamic>? dashboard;
   final VoidCallback onAddProduct;
   final VoidCallback onViewOrders;
+  final VoidCallback onMyAds;
+  final VoidCallback onAnalytics;
   final Future<void> Function() onRefresh;
- 
+
   const _OverviewTab({
     required this.store,
     required this.dashboard,
     required this.onAddProduct,
     required this.onViewOrders,
+    required this.onMyAds,
+    required this.onAnalytics,
     required this.onRefresh,
   });
  
@@ -264,10 +270,32 @@ class _OverviewTab extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: AppButton(
-                    label: 'View Orders',
+                    label: 'Orders',
                     outline: true,
                     icon: CupertinoIcons.list_bullet,
                     onTap: onViewOrders,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'My Ads',
+                    outline: true,
+                    icon: CupertinoIcons.rocket,
+                    onTap: onMyAds,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    label: 'Analytics',
+                    outline: true,
+                    icon: Icons.bar_chart_rounded,
+                    onTap: onAnalytics,
                   ),
                 ),
               ],

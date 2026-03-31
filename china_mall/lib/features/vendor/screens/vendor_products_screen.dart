@@ -32,6 +32,141 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
     });
   }
  
+  Future<void> _restockProduct(int id, String name, int currentQty) async {
+    final ctrl = TextEditingController(text: currentQty.toString());
+    final newQty = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+              24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Update Stock',
+                  style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 4),
+              Text(
+                name,
+                style: Theme.of(context).textTheme.bodyMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: ctrl,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 28,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'New stock quantity',
+                  suffixText: 'units',
+                  helperText:
+                      'Product hides automatically when stock reaches 0. Notified when below 3.',
+                  helperMaxLines: 2,
+                  filled: true,
+                  fillColor: AppColors.surfaceVariant,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppColors.border),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel',
+                          style: TextStyle(fontFamily: 'Satoshi')),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        final v = int.tryParse(ctrl.text.trim());
+                        if (v != null && v >= 0) {
+                          Navigator.pop(ctx, v);
+                        }
+                      },
+                      child: const Text('Update',
+                          style: TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    ctrl.dispose();
+    if (newQty == null) return;
+
+    final res = await ApiService.updateProductStock(id, newQty);
+    if (!mounted) return;
+    if (res.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(newQty == 0
+              ? '"$name" is now hidden from customers (stock 0).'
+              : 'Stock updated to $newQty unit(s).'),
+          backgroundColor:
+              newQty == 0 ? Colors.orange : Colors.green,
+        ),
+      );
+      _load();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res.errorMessage)),
+      );
+    }
+  }
+
   Future<void> _deleteProduct(int id, String name) async {
     final confirm = await showCupertinoDialog<bool>(
       context: context,
@@ -77,7 +212,7 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
         actions: [
           IconButton(
             icon: const Icon(CupertinoIcons.add),
-            onPressed: () => context.go('/vendor/products/add'),
+            onPressed: () => context.push('/vendor/products/add'),
           ),
         ],
       ),
@@ -89,7 +224,7 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
                   title: 'No products yet',
                   subtitle: 'Add your first product to start selling',
                   buttonLabel: 'Add Product',
-                  onButton: () => context.go('/vendor/products/add'),
+                  onButton: () => context.push('/vendor/products/add'),
                 )
               : RefreshIndicator(
                   onRefresh: _load,
@@ -157,11 +292,55 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
                                             price: (p['price'] ?? 0)
                                                 .toDouble()),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        'Stock: ${p['stock_quantity'] ?? 0}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
+                                      GestureDetector(
+                                        onTap: () => _restockProduct(
+                                          p['id'] as int,
+                                          p['name'] ?? '',
+                                          (p['stock_quantity'] ?? 0) as int,
+                                        ),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 7, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: (p['stock_quantity'] ?? 0) == 0
+                                                ? AppColors.error.withValues(alpha: 0.1)
+                                                : (p['stock_quantity'] ?? 0) < 3
+                                                    ? Colors.orange.withValues(alpha: 0.1)
+                                                    : AppColors.background,
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: (p['stock_quantity'] ?? 0) == 0
+                                                  ? AppColors.error.withValues(alpha: 0.4)
+                                                  : (p['stock_quantity'] ?? 0) < 3
+                                                      ? Colors.orange.withValues(alpha: 0.4)
+                                                      : AppColors.border,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                'Stock: ${p['stock_quantity'] ?? 0}',
+                                                style: TextStyle(
+                                                  fontFamily: 'Satoshi',
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: (p['stock_quantity'] ?? 0) == 0
+                                                      ? AppColors.error
+                                                      : (p['stock_quantity'] ?? 0) < 3
+                                                          ? Colors.orange.shade700
+                                                          : AppColors.textSecondary,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Icon(
+                                                CupertinoIcons.pencil,
+                                                size: 10,
+                                                color: AppColors.textTertiary,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -221,7 +400,7 @@ class _VendorProductsScreenState extends State<VendorProductsScreen> {
                   ),
                 ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/vendor/products/add'),
+        onPressed: () => context.push('/vendor/products/add'),
         backgroundColor: AppColors.primary,
         icon: const Icon(CupertinoIcons.add, color: Colors.white),
         label: const Text('Add Product',

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/notification_service.dart';
@@ -40,6 +41,17 @@ class AuthProvider extends ChangeNotifier {
   bool get isStaff => role == 'staff' || role == 'admin';
   bool get isOnline => _user?['is_online'] == true;
 
+  // Security — safe even if columns don't exist yet (pre-migration)
+  String get securityMethod => _user?['security_method']?.toString() ?? 'none';
+  bool get hasPin => securityMethod == 'pin' || securityMethod == 'both';
+  bool get needsSecuritySetup {
+    // Only prompt if the column actually exists in the profile data
+    if (_user == null) return false;
+    if (!_user!.containsKey('security_method')) return false;
+    return _user!['security_method'] == null || _user!['security_method'] == 'none';
+  }
+  String get accountStatus => _user?['account_status']?.toString() ?? 'active';
+
   Future<void> init() async {
     if (_loading) return;
 
@@ -52,7 +64,7 @@ class AuthProvider extends ChangeNotifier {
 
     await Future.wait([
       checkAuthStatus(),
-      Future.delayed(const Duration(milliseconds: 1200)),
+      Future.delayed(const Duration(milliseconds: 3500)), // minimum splash display
     ]);
 
     _loading = false;
@@ -218,7 +230,23 @@ class AuthProvider extends ChangeNotifier {
         await NotificationService.registerToken();
       } catch (_) {}
       _user = await _loadSupabaseProfile();
+
+      // Check if account is suspended — auto-restore within 6 months
+      // Only check if column exists in profile (post-migration)
+      if (_user?.containsKey('account_status') == true &&
+          _user?['account_status'] == 'suspended') {
+        final restored = await restoreAccount();
+        if (!restored) {
+          await logout(reason: 'Your account could not be restored. The recovery period may have expired.');
+          return false;
+        }
+      }
+
       _status = AuthStatus.authenticated;
+
+      // Register device and check trust
+      await registerDevice();
+
       return true;
     } on AuthException catch (e) {
       debugPrint('❌ AuthException: ${e.message} (statusCode: ${e.statusCode})');
@@ -362,15 +390,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await SupabaseService.client.from('profiles').update({
-        'email': null,
-        'phone': null,
-        'full_name': 'Deleted User',
-        'avatar_url': null,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', currentUser.id);
-
-      await logout();
+      // Soft delete: suspend account for 6 months, then auto-delete
+      await SupabaseService.client.rpc('request_account_deletion', params: {
+        'p_user_id': currentUser.id,
+      });
+      await logout(reason: 'Your account has been suspended. You can recover it within 6 months by logging in again.');
       return true;
     } catch (_) {
       _error = 'Unable to delete this account right now.';
@@ -378,6 +402,194 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _loading = false;
       notifyListeners();
+    }
+  }
+
+  /// Restore a suspended account after user logs in
+  Future<bool> restoreAccount() async {
+    if (!SupabaseService.isReady) return false;
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return false;
+
+    try {
+      final result = await SupabaseService.client.rpc('restore_account', params: {
+        'p_user_id': currentUser.id,
+      });
+      if (result == true) {
+        _user = await _loadSupabaseProfile();
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Set a login PIN
+  Future<bool> setLoginPin(String pin) async {
+    if (!SupabaseService.isReady) return false;
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return false;
+
+    try {
+      await SupabaseService.client.rpc('set_login_pin', params: {
+        'p_user_id': currentUser.id,
+        'p_pin': pin,
+      });
+      _user?['security_method'] = 'pin';
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // RPC may not exist yet if migration hasn't run
+      debugPrint('setLoginPin error: $e');
+      _error = 'PIN setup is not available yet. Please try again later.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Verify login PIN
+  Future<bool> verifyPin(String pin) async {
+    if (!SupabaseService.isReady) return false;
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return false;
+
+    try {
+      final result = await SupabaseService.client.rpc('verify_login_pin', params: {
+        'p_user_id': currentUser.id,
+        'p_pin': pin,
+      });
+      return result == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Update security method preference
+  Future<bool> setSecurityMethod(String method) async {
+    if (!SupabaseService.isReady) return false;
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return false;
+
+    try {
+      await SupabaseService.client.rpc('set_security_method', params: {
+        'p_user_id': currentUser.id,
+        'p_method': method,
+      });
+      _user?['security_method'] = method;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('setSecurityMethod error: $e');
+      return false;
+    }
+  }
+
+  // ── Device linking ─────────────────────────────────────────────────────────
+
+  bool _deviceTrusted = true; // assume trusted until proven otherwise
+  bool get isDeviceTrusted => _deviceTrusted;
+  bool _needsDeviceVerification = false;
+  bool get needsDeviceVerification => _needsDeviceVerification;
+
+  /// Get device fingerprint info
+  Future<Map<String, String>> _getDeviceInfo() async {
+    try {
+      final plugin = DeviceInfoPlugin();
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final info = await plugin.androidInfo;
+        return {
+          'device_id': info.id,
+          'device_name': '${info.brand} ${info.model}',
+          'device_os': 'Android ${info.version.release}',
+        };
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final info = await plugin.iosInfo;
+        return {
+          'device_id': info.identifierForVendor ?? 'unknown',
+          'device_name': info.name,
+          'device_os': '${info.systemName} ${info.systemVersion}',
+        };
+      }
+    } catch (e) {
+      debugPrint('DeviceInfo error: $e');
+    }
+    return {'device_id': 'web-${DateTime.now().millisecondsSinceEpoch}', 'device_name': 'Web Browser', 'device_os': 'Web'};
+  }
+
+  /// Register current device after login, returns whether device is trusted
+  Future<bool> registerDevice() async {
+    if (!SupabaseService.isReady) return true; // skip if not ready
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return true;
+
+    try {
+      final info = await _getDeviceInfo();
+      final result = await SupabaseService.client.rpc('register_device', params: {
+        'p_user_id': currentUser.id,
+        'p_device_id': info['device_id'],
+        'p_device_name': info['device_name'],
+        'p_device_os': info['device_os'],
+      });
+
+      if (result is Map) {
+        final trusted = result['is_trusted'] == true;
+        final isNew = result['is_new_device'] == true;
+        _deviceTrusted = trusted;
+        _needsDeviceVerification = isNew && !trusted;
+        notifyListeners();
+        return trusted;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('registerDevice error: $e');
+      return true; // don't block login if function doesn't exist yet
+    }
+  }
+
+  /// Request device verification code (sent to email)
+  Future<String?> requestDeviceVerificationCode() async {
+    if (!SupabaseService.isReady) return null;
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return null;
+
+    try {
+      final info = await _getDeviceInfo();
+      final code = await SupabaseService.client.rpc('generate_device_verification_code', params: {
+        'p_user_id': currentUser.id,
+        'p_device_id': info['device_id'],
+      });
+      return code?.toString();
+    } catch (e) {
+      debugPrint('requestDeviceVerificationCode error: $e');
+      return null;
+    }
+  }
+
+  /// Verify device with code + PIN
+  Future<bool> verifyDeviceWithCode(String code) async {
+    if (!SupabaseService.isReady) return false;
+    final currentUser = SupabaseService.client.auth.currentUser;
+    if (currentUser == null) return false;
+
+    try {
+      final info = await _getDeviceInfo();
+      final result = await SupabaseService.client.rpc('verify_device_code', params: {
+        'p_user_id': currentUser.id,
+        'p_device_id': info['device_id'],
+        'p_code': code,
+      });
+      if (result == true) {
+        _deviceTrusted = true;
+        _needsDeviceVerification = false;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('verifyDeviceWithCode error: $e');
+      return false;
     }
   }
 
