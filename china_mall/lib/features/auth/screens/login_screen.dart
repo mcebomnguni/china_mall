@@ -168,7 +168,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           onFieldSubmitted: (_) => _login(),
                         ),
-                        const SizedBox(height: 18),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: const Text(
+                              'Forgot password?',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         AppButton(
                           label: 'SIGN IN',
                           loading: auth.loading,

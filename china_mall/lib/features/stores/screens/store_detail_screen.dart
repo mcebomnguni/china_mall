@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_service.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
  
@@ -16,11 +17,39 @@ class StoreDetailScreen extends StatefulWidget {
 class _StoreDetailScreenState extends State<StoreDetailScreen>
     with SingleTickerProviderStateMixin {
   Map? _store;
-  List _products  = [];
-  List _reviews   = [];
-  bool _loading   = true;
-  bool _loadError = false;
+  List _products    = [];
+  List _reviews     = [];
+  bool _loading     = true;
+  bool _loadError   = false;
   late TabController _tabCtrl;
+
+  // S7 — category filter (null = show all)
+  String? _selectedParent;
+
+  List get _filteredProducts {
+    if (_selectedParent == null) return _products;
+    return _products.where((p) {
+      final slug = p['category']?['slug']?.toString() ?? '';
+      return AppConstants.categoryParent(slug) == _selectedParent;
+    }).toList();
+  }
+
+  /// Unique parent groups that actually appear in this store's products.
+  List<Map<String, String>> get _availableGroups {
+    final seen = <String>{};
+    final result = <Map<String, String>>[];
+    for (final p in _products) {
+      final slug = p['category']?['slug']?.toString() ?? '';
+      final parent = AppConstants.categoryParent(slug);
+      if (parent != null && seen.add(parent)) {
+        final group = AppConstants.categoryGroups
+            .firstWhere((g) => g['slug'] == parent,
+                orElse: () => {'slug': parent, 'label': parent, 'icon': ''});
+        result.add(group);
+      }
+    }
+    return result;
+  }
  
   @override
   void initState() {
@@ -294,21 +323,58 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                     title: 'No products yet',
                     subtitle: "This store hasn't listed any products.",
                   )
-                : RefreshIndicator(
-                    onRefresh: _load,
-                    color: AppColors.primary,
-                    child: GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.72,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemCount: _products.length,
-                      itemBuilder: (_, i) {
-                        final p = _products[i];
+                : Column(
+                    children: [
+                      // ── S7: Category filter chips ──────────────
+                      if (_availableGroups.length > 1)
+                        SizedBox(
+                          height: 44,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            children: [
+                              _CategoryChip(
+                                label: 'All',
+                                icon: '',
+                                selected: _selectedParent == null,
+                                onTap: () =>
+                                    setState(() => _selectedParent = null),
+                              ),
+                              ...(_availableGroups.map((g) => _CategoryChip(
+                                    label: g['label'] ?? '',
+                                    icon: g['icon'] ?? '',
+                                    selected: _selectedParent == g['slug'],
+                                    onTap: () => setState(
+                                        () => _selectedParent = g['slug']),
+                                  ))),
+                            ],
+                          ),
+                        ),
+                      // ── Products grid ──────────────────────────
+                      Expanded(
+                        child: _filteredProducts.isEmpty
+                            ? EmptyState(
+                                icon: CupertinoIcons.bag,
+                                title: 'No products in this category',
+                                subtitle:
+                                    'Try selecting a different category.',
+                              )
+                            : RefreshIndicator(
+                                onRefresh: _load,
+                                color: AppColors.primary,
+                                child: GridView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.72,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                  ),
+                                  itemCount: _filteredProducts.length,
+                                  itemBuilder: (_, i) {
+                                    final p = _filteredProducts[i];
                         return GestureDetector(
                           onTap: () =>
                               context.go('/products/${p['id']}'),
@@ -410,8 +476,11 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                             ),
                           ),
                         );
-                      },
-                    ),
+                                  },
+                                ),
+                              ),
+                        ),
+                    ],
                   ),
 
             // ── Reviews tab ──────────────────────────────────────
@@ -475,6 +544,47 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                     ),
                   ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Category filter chip ──────────────────────────────────────────────────────
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final String icon;
+  final bool selected;
+  final VoidCallback onTap;
+  const _CategoryChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          icon.isNotEmpty ? '$icon $label' : label,
+          style: TextStyle(
+            fontFamily: 'Satoshi',
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+            color: selected ? Colors.white : AppColors.textPrimary,
+          ),
         ),
       ),
     );

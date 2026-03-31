@@ -209,7 +209,7 @@ class _VendorOnboardingFormalScreenState extends State<VendorOnboardingFormalScr
   }
 
   List<Widget> _buildStep0() => [
-    _SectionHeader(icon: CupertinoIcons.building_2_fill, title: 'Business Information', color: AppColors.storeColor),
+    VendorSectionHeader(icon: CupertinoIcons.building_2_fill, title: 'Business Information', color: AppColors.storeColor),
     const SizedBox(height: 16),
     TextFormField(
       controller: _storeNameCtrl,
@@ -222,11 +222,11 @@ class _VendorOnboardingFormalScreenState extends State<VendorOnboardingFormalScr
       validator: (v) => v == null || v.trim().length < 3 ? 'Enter your business name' : null,
     ),
     const SizedBox(height: 20),
-    _InfoBox(text: 'Enter the business name exactly as it appears on your Company Registration Certificate (COR).'),
+    VendorInfoBox(text: 'Enter the business name exactly as it appears on your Company Registration Certificate (COR).'),
   ];
 
   List<Widget> _buildStep1() => [
-    _SectionHeader(icon: CupertinoIcons.doc_fill, title: 'Required Documents', color: AppColors.storeColor),
+    VendorSectionHeader(icon: CupertinoIcons.doc_fill, title: 'Required Documents', color: AppColors.storeColor),
     const SizedBox(height: 4),
     const Text(
       'Upload clear, legible copies of each document.',
@@ -234,7 +234,7 @@ class _VendorOnboardingFormalScreenState extends State<VendorOnboardingFormalScr
     ),
     const SizedBox(height: 20),
 
-    _DocUploadTile(
+    VendorDocUploadTile(
       label: 'COR — Company Registration Certificate',
       required: true,
       file: _corFile,
@@ -242,7 +242,7 @@ class _VendorOnboardingFormalScreenState extends State<VendorOnboardingFormalScr
       onRemove: () => setState(() => _corFile = null),
     ),
     const SizedBox(height: 12),
-    _DocUploadTile(
+    VendorDocUploadTile(
       label: 'Proof of Bank Account',
       hint: 'Must match the business name',
       required: true,
@@ -253,7 +253,7 @@ class _VendorOnboardingFormalScreenState extends State<VendorOnboardingFormalScr
   ];
 
   List<Widget> _buildStep2() => [
-    _SectionHeader(icon: CupertinoIcons.person_2_fill, title: 'People Information', color: AppColors.storeColor),
+    VendorSectionHeader(icon: CupertinoIcons.person_2_fill, title: 'People Information', color: AppColors.storeColor),
     const SizedBox(height: 4),
     const Text(
       'Add up to 3 people associated with this business. At least one is required.',
@@ -401,7 +401,7 @@ class _PersonForm extends StatelessWidget {
             validator: index == 0 ? (v) => v == null || !v.contains('@') ? 'Enter valid email' : null : null,
           ),
           const SizedBox(height: 10),
-          _DocUploadTile(
+          VendorDocUploadTile(
             label: 'ID Document',
             required: index == 0,
             file: person.idFile,
@@ -453,11 +453,11 @@ class _StepIndicator extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
+class VendorSectionHeader extends StatelessWidget {
   final IconData icon;
   final String title;
   final Color color;
-  const _SectionHeader({required this.icon, required this.title, required this.color});
+  const VendorSectionHeader({required this.icon, required this.title, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -475,7 +475,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _DocUploadTile extends StatelessWidget {
+class VendorDocUploadTile extends StatelessWidget {
   final String label;
   final String? hint;
   final bool required;
@@ -483,7 +483,7 @@ class _DocUploadTile extends StatelessWidget {
   final VoidCallback onPick;
   final VoidCallback onRemove;
 
-  const _DocUploadTile({
+  const VendorDocUploadTile({
     required this.label,
     this.hint,
     required this.required,
@@ -507,7 +507,7 @@ class _DocUploadTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              uploaded ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.doc_badge_plus,
+              uploaded ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.doc_fill,
               color: uploaded ? AppColors.success : AppColors.textTertiary,
               size: 22,
             ),
@@ -540,9 +540,9 @@ class _DocUploadTile extends StatelessWidget {
   }
 }
 
-class _InfoBox extends StatelessWidget {
+class VendorInfoBox extends StatelessWidget {
   final String text;
-  const _InfoBox({required this.text});
+  const VendorInfoBox({required this.text});
 
   @override
   Widget build(BuildContext context) => Container(

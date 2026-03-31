@@ -57,10 +57,11 @@ class MainShell extends StatelessWidget {
 
     int currentIndex = 0;
     for (int i = 0; i < tabs.length; i++) {
-      if (location.startsWith(tabs[i].path) && tabs[i].path != '/') {
-        if (tabs[i].path == location) { currentIndex = i; }
+      if (tabs[i].path == '/') {
+        if (location == '/') currentIndex = i;
+      } else if (location.startsWith(tabs[i].path)) {
+        currentIndex = i;
       }
-      if (tabs[i].path == '/' && location == '/') { currentIndex = 0; }
     }
 
     return Scaffold(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
@@ -86,62 +87,92 @@ class StoreProductService {
   }
 
   static Future<Map<String, dynamic>> getOwnerDashboard() async {
+    final client = SupabaseService.client;
+    final user = client.auth.currentUser;
+    if (user == null) return {};
+
     try {
-      final client = SupabaseService.client;
-      final user = client.auth.currentUser;
-      if (user != null) {
-        final ordersRes = await client
-            .from('orders')
-            .select('id,total_amount,status,created_at')
-            .eq('profile_id', user.id)
-            .limit(50);
-        return {'orders': ordersRes};
+      // Get vendor's store
+      final store = await client.from('stores').select('id').eq('owner', user.id).maybeSingle();
+      if (store == null) return {'orders': [], 'total_revenue': 0, 'product_count': 0};
+
+      final storeId = store['id'];
+
+      // Get store's products first
+      final products = await client.from('products').select('id').eq('store_id', storeId);
+      final productIds = (products as List).map((p) => p['id']).toList();
+
+      double totalRevenue = 0;
+      final orders = <int, Map<String, dynamic>>{};
+
+      if (productIds.isNotEmpty) {
+        // Get order items for these products
+        final orderItems = await client
+            .from('order_items')
+            .select('order_id, quantity, unit_price')
+            .in_('product_id', productIds)
+            .limit(200);
+
+        for (final oi in (orderItems as List)) {
+          totalRevenue += ((oi['quantity'] as num?) ?? 0) * ((oi['unit_price'] as num?) ?? 0);
+          final oid = oi['order_id'] as int;
+          orders[oid] = {'id': oid};
+        }
       }
-    } catch (_) {}
-    final res = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/vendor/dashboard/'),
-      headers: await _authHeaders(),
-    );
-    return jsonDecode(res.body);
+
+      final prodCount = products;
+
+      return {
+        'orders': orders.values.toList(),
+        'total_revenue': totalRevenue,
+        'product_count': (prodCount as List).length,
+        'order_count': orders.length,
+      };
+    } catch (e) {
+      debugPrint('getOwnerDashboard error: $e');
+      return {'orders': [], 'total_revenue': 0, 'product_count': 0, 'order_count': 0};
+    }
   }
 
   static Future<List<dynamic>> getOwnerEarnings({int? year, int? month}) async {
+    final client = SupabaseService.client;
+    final user = client.auth.currentUser;
+    if (user == null) return [];
+
     try {
-      final client = SupabaseService.client;
-      final user = client.auth.currentUser;
-      if (user != null) {
-        final res = await client
-            .from('orders')
-            .select('total_amount,created_at')
-            .eq('profile_id', user.id);
-        return List<dynamic>.from(res);
-      }
-    } catch (_) {}
-    String url = '${ApiConstants.baseUrl}/vendor/earnings/';
-    final params = <String, String>{};
-    if (year != null) params['year'] = year.toString();
-    if (month != null) params['month'] = month.toString();
-    if (params.isNotEmpty) {
-      url += '?${Uri(queryParameters: params).query}';
+      final store = await client.from('stores').select('id').eq('owner', user.id).maybeSingle();
+      if (store == null) return [];
+
+      final storeId = store['id'];
+      // Get products for this store, then their order items
+      final products = await client.from('products').select('id').eq('store_id', storeId);
+      final productIds = (products as List).map((p) => p['id']).toList();
+      if (productIds.isEmpty) return [];
+
+      final res = await client
+          .from('order_items')
+          .select('quantity, unit_price, created_at')
+          .in_('product_id', productIds);
+
+      return List<dynamic>.from(res as List);
+    } catch (e) {
+      debugPrint('getOwnerEarnings error: $e');
+      return [];
     }
-    final res = await http.get(Uri.parse(url), headers: await _authHeaders());
-    return jsonDecode(res.body);
   }
 
   static Future<List<dynamic>> getOwnerDisputes() async {
+    final client = SupabaseService.client;
+    final user = client.auth.currentUser;
+    if (user == null) return [];
+
     try {
-      final client = SupabaseService.client;
-      final user = client.auth.currentUser;
-      if (user != null) {
-        final res = await client.from('disputes').select('*').eq('raised_by', user.id);
-        return List<dynamic>.from(res);
-      }
-    } catch (_) {}
-    final res = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/vendor/disputes/'),
-      headers: await _authHeaders(),
-    );
-    return jsonDecode(res.body);
+      final res = await client.from('disputes').select('*').eq('raised_by', user.id);
+      return List<dynamic>.from(res as List);
+    } catch (e) {
+      debugPrint('getOwnerDisputes error: $e');
+      return [];
+    }
   }
 
   static Future<List<dynamic>> getProducts({
@@ -283,7 +314,8 @@ class StoreProductService {
               final extension = file.path.toLowerCase().endsWith('.png') ? '.png' : '.jpg';
               final path =
                   'products/$productId/${DateTime.now().millisecondsSinceEpoch}_$i$extension';
-              await client.storage.from('product-images').upload(path, file);
+              final bytes = await file.readAsBytes();
+              await client.storage.from('product-images').uploadBinary(path, bytes);
               final publicUrl = client.storage.from('product-images').getPublicUrl(path);
               uploadedUrls.add(publicUrl);
               await client.from('product_images').insert({
