@@ -358,6 +358,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 20),
                     ],
  
+                    // ── Role Switch ──────────────────────────────────
+                    const SectionLabel(title: 'Role'),
+                    const SizedBox(height: 8),
+                    OsCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          if (!auth.isCourier)
+                            _MenuItem(
+                              icon: Icons.local_shipping_outlined,
+                              label: 'Switch to Courier',
+                              onTap: () => context.go('/courier'),
+                            ),
+                          if (auth.isCourier)
+                            _MenuItem(
+                              icon: CupertinoIcons.bag,
+                              label: 'Switch to Customer',
+                              onTap: () => context.go('/'),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
                     // ── Preferences ───────────────────────────────────
                     const SectionLabel(title: 'Preferences'),
                     const SizedBox(height: 8),
