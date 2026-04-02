@@ -36,6 +36,8 @@ import '../../features/courier/screens/pickup_assignments_screen.dart';
 import '../../features/courier/screens/pickup_detail_screen.dart';
 import '../../features/courier/screens/active_deliveries_screen.dart';
 import '../../features/courier/screens/delivery_handoff_screen.dart';
+import '../../features/courier/screens/courier_history_screen.dart';
+import '../../features/courier/screens/courier_earnings_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/trends/screens/trends_screen.dart';
 import '../../main_shell.dart';
@@ -208,6 +210,12 @@ GoRouter createRouter(AuthProvider auth) {
               path: '/courier/deliver/:id',
               builder: (_, state) => DeliveryHandoffScreen(
                   deliveryId: int.parse(state.pathParameters['id']!))),
+          GoRoute(
+              path: '/courier/history',
+              builder: (_, __) => const CourierHistoryScreen()),
+          GoRoute(
+              path: '/courier/earnings',
+              builder: (_, __) => const CourierEarningsScreen()),
           GoRoute(
               path: '/admin',
               builder: (_, __) => const AdminDashboardScreen()),
