@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/pickup_assignment.dart';
 import 'missing_item_sheet.dart';
@@ -168,7 +169,7 @@ class _ItemRowState extends State<_ItemRow>
                 ),
                 child: isDone
                     ? Icon(
-                        item.isMissing ? Icons.close : Icons.check,
+                        item.isMissing ? LucideIcons.x : LucideIcons.check,
                         size: 16,
                         color: Colors.white,
                       )

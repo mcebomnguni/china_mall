@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/pickup_assignment.dart';
@@ -90,7 +90,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: AppColors.textPrimary),
+          icon: const Icon(LucideIcons.arrowLeft, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -104,7 +104,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.phone_outlined, color: AppColors.primary),
+            icon: const Icon(LucideIcons.phone, color: AppColors.primary),
             onPressed: _callStore,
           ),
         ],
@@ -129,7 +129,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.check_circle,
+                        LucideIcons.checkCircle2,
                         size: 48,
                         color: AppColors.success,
                       ),
@@ -171,7 +171,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                             color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.store,
+                          child: const Icon(LucideIcons.store,
                               color: AppColors.primary, size: 20),
                         ),
                         const SizedBox(width: 12),
@@ -209,7 +209,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                               color: AppColors.success.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.phone,
+                            child: const Icon(LucideIcons.phone,
                                 color: AppColors.success, size: 18),
                           ),
                         ),
