@@ -4,7 +4,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
-import '../constants/app_constants.dart';
 
 // ─── Shimmer skeleton ────────────────────────────────────────────────────────
 class ShimmerBox extends StatelessWidget {
@@ -508,15 +507,25 @@ class CategoryPickerField extends StatelessWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(top: 16, bottom: 8),
-                        child: Text(
-                          '${group['icon']} ${group['label']}',
-                          style: const TextStyle(
-                            fontFamily: 'Satoshi',
-                            fontWeight: FontWeight.w900,
-                            fontSize: 11,
-                            letterSpacing: 1.2,
-                            color: AppColors.textTertiary,
-                          ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              AppConstants.categoryIcon(group['slug']!),
+                              size: 14,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              group['label']!,
+                              style: const TextStyle(
+                                fontFamily: 'Satoshi',
+                                fontWeight: FontWeight.w900,
+                                fontSize: 11,
+                                letterSpacing: 1.2,
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Wrap(
@@ -540,16 +549,29 @@ class CategoryPickerField extends StatelessWidget {
                                       : AppColors.border,
                                 ),
                               ),
-                              child: Text(
-                                '${sub['icon']} ${sub['label']}',
-                                style: TextStyle(
-                                  fontFamily: 'Satoshi',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppColors.textPrimary,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    AppConstants.categoryIcon(sub['slug']!),
+                                    size: 14,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    sub['label']!,
+                                    style: TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -585,7 +607,7 @@ class CategoryPickerField extends StatelessWidget {
           children: [
             Text(
               cat != null
-                  ? '${cat['icon']} ${cat['label']}'
+                  ? cat['label']!
                   : 'Select Category',
               style: TextStyle(
                 fontFamily: 'Satoshi',

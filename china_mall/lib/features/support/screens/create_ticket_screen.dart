@@ -132,7 +132,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             children: [
               // ── Help text ───────────────────────────────────────────────
               OsCard(
-                color: AppColors.green050,
+                color: AppColors.primaryLight,
                 child: Row(
                   children: [
                     Container(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
@@ -75,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth      = context.watch<AuthProvider>();
     final firstName = auth.user?['first_name'] ?? auth.user?['username'] ?? 'there';
-    final role      = auth.user?['role'] ?? 'buyer';
  
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -85,91 +85,70 @@ class _HomeScreenState extends State<HomeScreen> {
           onRefresh: _load,
           child: CustomScrollView(
             slivers: [
-              // ── OS Top Bar ──────────────────────────────────────────────
+              // ── Top bar with avatar + greeting + notification ─────────
               SliverToBoxAdapter(
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.95),
-                  ),
                   child: Row(
                     children: [
-                      // Logo pill
+                      // Avatar circle
                       Container(
-                        width: 30, height: 30,
+                        width: 40, height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.black,
-                          borderRadius: BorderRadius.circular(9),
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8)],
+                          color: AppColors.surfaceVariant,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.border, width: 1.5),
                         ),
                         child: Center(
-                          child: Transform.rotate(
-                            angle: 0.05,
-                            child: const Text('C',
-                              style: TextStyle(
-                                fontFamily: 'Satoshi', color: Colors.white,
-                                fontWeight: FontWeight.w900, fontSize: 14,
-                              ),
+                          child: Text(
+                            firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
+                            style: const TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'OS / ${role.toUpperCase()}',
-                        style: const TextStyle(
-                          fontFamily: 'Satoshi', fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2, color: AppColors.black,
-                        ),
-                      ),
-                      const Spacer(),
-                      // Active indicator
-                      Container(
-                        width: 6, height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.success, shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Text(
-                        'ACTIVE',
-                        style: TextStyle(
-                          fontFamily: 'Satoshi', fontSize: 8,
-                          fontWeight: FontWeight.w900, letterSpacing: 1.5,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
                       const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Welcome Back,',
+                              style: TextStyle(
+                                fontFamily: 'Satoshi', fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            Text(
+                              firstName,
+                              style: const TextStyle(
+                                fontFamily: 'Satoshi', fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       // Notifications
                       GestureDetector(
                         onTap: () => context.go('/notifications'),
                         child: Container(
-                          width: 36, height: 36,
+                          width: 40, height: 40,
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(11),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: const Icon(CupertinoIcons.bell, size: 16, color: AppColors.textSecondary),
+                          child: Icon(LucideIcons.bell, size: 18, color: AppColors.textSecondary),
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ),
- 
-              // ── Welcome heading ─────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: Text(
-                    'Welcome Back,\n$firstName.',
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi', fontSize: 26,
-                      fontWeight: FontWeight.w900, height: 1.1,
-                      letterSpacing: -0.5, color: AppColors.black,
-                    ),
                   ),
                 ),
               ),
@@ -270,37 +249,45 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 80,
+                  height: 90,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: AppConstants.categories.length,
                     itemBuilder: (_, i) {
                       final cat = AppConstants.categories[i];
+                      final iconData = AppConstants.categoryIcon(cat['slug']!);
                       return GestureDetector(
                         onTap: () => context.go('/products?category=${cat['slug']}'),
                         child: Container(
-                          width: 64, margin: const EdgeInsets.only(right: 10),
+                          width: 72,
+                          margin: const EdgeInsets.only(right: 12),
                           child: Column(
                             children: [
                               Container(
-                                width: 52, height: 52,
+                                width: 56, height: 56,
                                 decoration: BoxDecoration(
                                   color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.border),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.06),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                                 child: Center(
-                                  child: Text(cat['icon']!, style: const TextStyle(fontSize: 22)),
+                                  child: Icon(iconData, size: 28, color: AppColors.primary),
                                 ),
                               ),
-                              const SizedBox(height: 5),
+                              const SizedBox(height: 6),
                               Text(
                                 cat['label']!,
                                 style: const TextStyle(
-                                  fontFamily: 'Satoshi', fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textSecondary,
+                                  fontFamily: 'Satoshi', fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textPrimary,
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1, overflow: TextOverflow.ellipsis,

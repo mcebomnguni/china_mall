@@ -23,11 +23,11 @@ import 'core/services/supabase_service.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    debugPrint('🚀 Starting app...');
+    debugPrint('[ChinaStall] Starting app...');
 
     // Load .env from assets
     await dotenv.load(fileName: '.env');
-    debugPrint('✅ .env loaded from assets');
+    debugPrint('[ChinaStall] .env loaded from assets');
 
     final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? 'https://your-project.supabase.co';
     final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
@@ -45,10 +45,10 @@ void main() async {
       DeviceOrientation.portraitDown,
     ]);
 
-    debugPrint('📱 Initializing AppInfoService...');
+    debugPrint('[ChinaStall] Initializing AppInfoService...');
     await AppInfoService.init();
 
-    debugPrint('🔌 Initializing Supabase...');
+    debugPrint('[ChinaStall] Initializing Supabase...');
     await SupabaseService.init(
       url: supabaseUrl,
       anonKey: supabaseClientKey,
@@ -57,22 +57,22 @@ void main() async {
     
     if (SupabaseService.isReady) {
       try {
-        debugPrint('🔔 Initializing NotificationService...');
+        debugPrint('[ChinaStall] Initializing NotificationService...');
         await NotificationService.init();
-        debugPrint('✅ NotificationService initialized');
+        debugPrint('[ChinaStall] NotificationService initialized');
       } catch (e) {
-        debugPrint('⚠️ NotificationService failed: $e');
+        debugPrint('[ChinaStall] NotificationService failed: $e');
       }
     }
 
     // Load persisted theme before first frame — no flash of wrong theme.
-    debugPrint('🎨 Initializing theme...');
+    debugPrint('[ChinaStall] Initializing theme...');
     final themeNotifier = ThemeNotifier();
     await themeNotifier.init();
     _applySystemUI(dark: themeNotifier.isDark);
-    debugPrint('✅ Theme initialized');
+    debugPrint('[ChinaStall] Theme initialized');
 
-    debugPrint('🏗️ Building app...');
+    debugPrint('[ChinaStall] Building app...');
     runApp(
       MultiProvider(
         providers: [
@@ -88,9 +88,9 @@ void main() async {
         child: const ChinaStallApp(),
       ),
     );
-    debugPrint('✅ App started successfully');
+    debugPrint('[ChinaStall] App started successfully');
   } catch (e, stackTrace) {
-    debugPrint('❌ FATAL ERROR IN MAIN: $e');
+    debugPrint('[ChinaStall] FATAL ERROR IN MAIN: $e');
     debugPrint('Stack trace: $stackTrace');
     // Show error screen
     runApp(ErrorScreen(error: e.toString()));

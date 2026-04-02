@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
 import '../../../core/constants/app_constants.dart';
- 
+
 class ProductsScreen extends StatefulWidget {
   final String? initialCategory;
   const ProductsScreen({super.key, this.initialCategory});
- 
+
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
 }
- 
+
 class _ProductsScreenState extends State<ProductsScreen> {
   List _products    = [];
   bool _loading     = true;
@@ -24,7 +25,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   bool _hasMore     = true;
   bool _loadingMore = false;
   final _scroll     = ScrollController();
- 
+
   @override
   void initState() {
     super.initState();
@@ -32,15 +33,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
     _load();
     _scroll.addListener(_onScroll);
   }
- 
+
   @override
   void dispose() {
     _scroll.dispose();
     super.dispose();
   }
- 
-  // ── Scroll listener ────────────────────────────────────────────────────────
- 
+
   void _onScroll() {
     if (_scroll.position.pixels >=
             _scroll.position.maxScrollExtent - 200 &&
@@ -49,72 +48,64 @@ class _ProductsScreenState extends State<ProductsScreen> {
       _loadMore();
     }
   }
- 
-  // ── Initial load ───────────────────────────────────────────────────────────
- 
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
       _page    = 1;
       _hasMore = true;
     });
- 
+
     final res = await ApiService.getProducts(
       category: _selectedCategory,
       ordering: _sort,
-      page:     1,            // always reset to page 1 on a fresh load
+      page:     1,
     );
     if (!mounted) return;
- 
+
     final data  = res.isSuccess ? res.data : null;
     final items = _extractItems(data);
- 
+
     setState(() {
       _products = items;
       _hasMore  = _hasNextPage(data);
       _loading  = false;
     });
   }
- 
-  // ── Load next page ─────────────────────────────────────────────────────────
- 
+
   Future<void> _loadMore() async {
     if (_loadingMore || !_hasMore) return;
     setState(() {
       _loadingMore = true;
       _page++;
     });
- 
+
     final res = await ApiService.getProducts(
       category: _selectedCategory,
       ordering: _sort,
-      page:     _page,        // was missing — always loaded page 1 before
+      page:     _page,
     );
     if (!mounted) return;
- 
+
     final data  = res.isSuccess ? res.data : null;
     final items = _extractItems(data);
- 
+
     setState(() {
       _products.addAll(items);
       _hasMore     = _hasNextPage(data);
       _loadingMore = false;
     });
   }
- 
-  // ── Helpers ────────────────────────────────────────────────────────────────
- 
+
   List _extractItems(dynamic data) {
     if (data == null) return [];
     if (data is Map) return (data['results'] ?? data) as List? ?? [];
     return data as List? ?? [];
   }
- 
+
   bool _hasNextPage(dynamic data) =>
       data is Map && data['next'] != null;
- 
-  // ── Build ──────────────────────────────────────────────────────────────────
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,14 +113,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
       body: SafeArea(
         child: Column(
           children: [
- 
+
             // ── Top bar ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
                   const Text(
-                    'Products',
+                    'Shop',
                     style: TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 22,
@@ -139,18 +130,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   ),
                   const Spacer(),
                   _IconBtn(
-                    icon: CupertinoIcons.search,
+                    icon: LucideIcons.search,
                     onTap: () => context.go('/search'),
                   ),
                   const SizedBox(width: 8),
                   _IconBtn(
-                    icon: CupertinoIcons.slider_horizontal_3,
+                    icon: LucideIcons.slidersHorizontal,
                     onTap: _showSortSheet,
                   ),
                 ],
               ),
             ),
- 
+
             // ── Category chips ────────────────────────────────────────
             SizedBox(
               height: 52,
@@ -164,7 +155,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     final sel = _selectedCategory == null;
                     return _CategoryChip(
                       label: 'All',
-                      emoji: '✦',
+                      icon: LucideIcons.layoutGrid,
                       selected: sel,
                       onTap: () {
                         setState(() => _selectedCategory = null);
@@ -176,7 +167,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   final sel = _selectedCategory == cat['slug'];
                   return _CategoryChip(
                     label: cat['label']!,
-                    emoji: cat['icon']!,
+                    icon: AppConstants.categoryIcon(cat['slug']!),
                     selected: sel,
                     onTap: () {
                       setState(() => _selectedCategory = cat['slug']);
@@ -186,7 +177,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 },
               ),
             ),
- 
+
             // ── Grid ─────────────────────────────────────────────────
             Expanded(
               child: _loading
@@ -199,7 +190,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               'No products found in this category.',
                         )
                       : RefreshIndicator(
-                          color: AppColors.black,
+                          color: AppColors.primary,
                           onRefresh: _load,
                           child: MasonryGridView.count(
                             controller: _scroll,
@@ -233,7 +224,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
   }
- 
+
   Widget _buildSkeletons() {
     return MasonryGridView.count(
       crossAxisCount: 2,
@@ -248,7 +239,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
   }
- 
+
   void _showSortSheet() {
     showCupertinoModalPopup(
       context: context,
@@ -267,7 +258,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
   }
- 
+
   CupertinoActionSheetAction _sortAction(String label, String value) {
     return CupertinoActionSheetAction(
       child: Text(label),
@@ -279,16 +270,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 }
- 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Private widgets
 // ─────────────────────────────────────────────────────────────────────────────
- 
+
 class _IconBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   const _IconBtn({required this.icon, required this.onTap});
- 
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -306,18 +297,19 @@ class _IconBtn extends StatelessWidget {
     );
   }
 }
- 
+
 class _CategoryChip extends StatelessWidget {
-  final String label, emoji;
+  final String label;
+  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
   const _CategoryChip({
     required this.label,
-    required this.emoji,
+    required this.icon,
     required this.selected,
     required this.onTap,
   });
- 
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -328,15 +320,19 @@ class _CategoryChip extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? AppColors.black : AppColors.surface,
+          color: selected ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: selected ? AppColors.black : AppColors.border),
+              color: selected ? AppColors.primary : AppColors.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 12)),
+            Icon(
+              icon,
+              size: 14,
+              color: selected ? AppColors.white : AppColors.primary,
+            ),
             const SizedBox(width: 5),
             Text(
               label,
@@ -355,12 +351,12 @@ class _CategoryChip extends StatelessWidget {
     );
   }
 }
- 
+
 class _ProductTile extends StatelessWidget {
   final Map product;
   final VoidCallback onTap;
   const _ProductTile({required this.product, required this.onTap});
- 
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -406,7 +402,7 @@ class _ProductTile extends StatelessWidget {
                       fontFamily: 'Satoshi',
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
-                      color: AppColors.black,
+                      color: AppColors.primary,
                     ),
                   ),
                   if (product['rating'] != null) ...[

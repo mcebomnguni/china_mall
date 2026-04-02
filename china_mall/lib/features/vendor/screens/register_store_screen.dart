@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -92,7 +93,7 @@ class _RegisterStoreScreenState extends State<RegisterStoreScreen> {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('🏪', style: TextStyle(fontSize: 40)),
+                  Icon(LucideIcons.store, size: 40, color: AppColors.primary),
                   SizedBox(height: 12),
                   Text(
                     'Start selling\non China Stall Market Place',
@@ -213,8 +214,7 @@ class _RegisterStoreScreenState extends State<RegisterStoreScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('📋',
-                      style: TextStyle(fontSize: 18)),
+                  const Icon(LucideIcons.clipboardList, size: 28, color: AppColors.primary),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(

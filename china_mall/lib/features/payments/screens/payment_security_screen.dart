@@ -190,7 +190,7 @@ class _PaymentSecurityScreenState extends State<PaymentSecurityScreen> {
                     icon: Icons.pin,
                     title: 'Pay with PIN',
                     subtitle: 'Enter your 4-digit payment PIN',
-                    color: AppColors.green700,
+                    color: AppColors.primary,
                     onTap: () => setState(() => _showPinEntry = true),
                   ),
                 ],

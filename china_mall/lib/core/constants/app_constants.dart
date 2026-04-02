@@ -1,29 +1,54 @@
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
 class AppConstants {
   // ── Top-level category groups ──────────────────────────────────────────────
   static const List<Map<String, String>> categoryGroups = [
-    {'slug': 'clothes',     'label': 'Clothes',     'icon': '👗'},
-    {'slug': 'household',   'label': 'Household',   'icon': '🏠'},
-    {'slug': 'electronics', 'label': 'Electronics', 'icon': '📱'},
+    {'slug': 'clothes',     'label': 'Clothes'},
+    {'slug': 'household',   'label': 'Household'},
+    {'slug': 'electronics', 'label': 'Electronics'},
   ];
 
   // ── Sub-categories (ordered by parent group) ───────────────────────────────
-  // Each entry includes 'parent' mapping to a categoryGroups slug.
   static const List<Map<String, String>> categories = [
     // Clothes
-    {'slug': 'clothing',    'label': 'Clothing',    'icon': '👘', 'parent': 'clothes'},
-    {'slug': 'shoes',       'label': 'Shoes',       'icon': '👟', 'parent': 'clothes'},
-    {'slug': 'accessories', 'label': 'Accessories', 'icon': '💍', 'parent': 'clothes'},
-    {'slug': 'sportswear',  'label': 'Sportswear',  'icon': '⚽', 'parent': 'clothes'},
-    {'slug': 'bags',        'label': 'Bags',        'icon': '👜', 'parent': 'clothes'},
+    {'slug': 'clothing',    'label': 'Clothing',    'parent': 'clothes'},
+    {'slug': 'shoes',       'label': 'Shoes',       'parent': 'clothes'},
+    {'slug': 'accessories', 'label': 'Accessories', 'parent': 'clothes'},
+    {'slug': 'sportswear',  'label': 'Sportswear',  'parent': 'clothes'},
+    {'slug': 'bags',        'label': 'Bags',        'parent': 'clothes'},
     // Household
-    {'slug': 'blankets',    'label': 'Blankets',    'icon': '🛏', 'parent': 'household'},
-    {'slug': 'furniture',   'label': 'Furniture',   'icon': '🛋', 'parent': 'household'},
-    {'slug': 'carpets',     'label': 'Carpets',     'icon': '🪞', 'parent': 'household'},
-    {'slug': 'kitchen',     'label': 'Kitchen',     'icon': '🍳', 'parent': 'household'},
-    {'slug': 'toys',        'label': 'Toys',        'icon': '🧸', 'parent': 'household'},
+    {'slug': 'blankets',    'label': 'Blankets',    'parent': 'household'},
+    {'slug': 'furniture',   'label': 'Furniture',   'parent': 'household'},
+    {'slug': 'carpets',     'label': 'Carpets',     'parent': 'household'},
+    {'slug': 'kitchen',     'label': 'Kitchen',     'parent': 'household'},
+    {'slug': 'toys',        'label': 'Toys',        'parent': 'household'},
     // Electronics
-    {'slug': 'electronics', 'label': 'Electronics', 'icon': '📱', 'parent': 'electronics'},
+    {'slug': 'electronics', 'label': 'Electronics', 'parent': 'electronics'},
   ];
+
+  // ── Category icon mapping (slug -> Lucide icon) ────────────────────────────
+  static final Map<String, IconData> categoryIcons = {
+    // Groups
+    'clothes':     LucideIcons.shirt,
+    'household':   LucideIcons.sofa,
+    'electronics': LucideIcons.smartphone,
+    // Sub-categories
+    'clothing':    LucideIcons.shirt,
+    'shoes':       LucideIcons.footprints,
+    'accessories': LucideIcons.gem,
+    'sportswear':  LucideIcons.dumbbell,
+    'bags':        LucideIcons.shoppingBag,
+    'blankets':    LucideIcons.bedDouble,
+    'furniture':   LucideIcons.sofa,
+    'carpets':     LucideIcons.frame,
+    'kitchen':     LucideIcons.chefHat,
+    'toys':        LucideIcons.baby,
+  };
+
+  /// Returns the Lucide icon for a category slug.
+  static IconData categoryIcon(String slug) =>
+      categoryIcons[slug] ?? LucideIcons.tag;
 
   /// Returns the parent group slug for a given sub-category slug.
   static String? categoryParent(String slug) {
@@ -102,8 +127,4 @@ class AppConstants {
 class ApiConstants {
   // ── Change this to your deployed Django URL in production ──
   static const String baseUrl = 'http://10.0.2.2:8000/api';
-  // For physical device on same WiFi, use your machine's IP:
-  // static const String baseUrl = 'http://192.168.x.x:8000/api';
-  // For production:
-  // static const String baseUrl = 'https://api.chinamall.co.za/api';
 }

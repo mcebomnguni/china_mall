@@ -500,7 +500,7 @@ class VendorDocUploadTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: uploaded ? AppColors.green050 : AppColors.surface,
+          color: uploaded ? AppColors.primaryLight : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: uploaded ? AppColors.success : AppColors.border),
         ),

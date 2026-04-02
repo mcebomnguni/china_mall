@@ -511,7 +511,7 @@ class _MessageBubble extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: isAdmin ? AppColors.primary : AppColors.green100,
+                color: isAdmin ? AppColors.primary : AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -538,7 +538,7 @@ class _MessageBubble extends StatelessWidget {
                 color: isOwnMessage
                     ? AppColors.primary.withValues(alpha: 0.08)
                     : isAdmin
-                        ? AppColors.green050
+                        ? AppColors.primaryLight
                         : AppColors.surface,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),

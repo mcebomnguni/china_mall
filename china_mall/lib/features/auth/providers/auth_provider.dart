@@ -210,8 +210,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final email = username.trim();
-      debugPrint('🔐 Attempting login for: $email');
-      debugPrint('🔌 Supabase ready: ${SupabaseService.isReady}');
+      debugPrint('[Auth] Attempting login for: $email');
+      debugPrint('[Auth] Supabase ready: ${SupabaseService.isReady}');
       final authResponse = await SupabaseService.client.auth.signInWithPassword(
         email: email,
         password: password,
@@ -249,7 +249,7 @@ class AuthProvider extends ChangeNotifier {
 
       return true;
     } on AuthException catch (e) {
-      debugPrint('❌ AuthException: ${e.message} (statusCode: ${e.statusCode})');
+      debugPrint('[Auth] AuthException: ${e.message} (statusCode: ${e.statusCode})');
       final msg = e.message.toLowerCase();
       if (msg.contains('invalid login credentials') ||
           msg.contains('invalid credentials')) {

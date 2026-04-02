@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:lucide_icons/lucide_icons.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/cart/providers/cart_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -11,32 +11,33 @@ class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
-  static const _buyerTabs = [
-    _TabItem(icon: CupertinoIcons.house_fill,      label: 'Main',     path: '/'),
-    _TabItem(icon: CupertinoIcons.square_grid_2x2_fill, label: 'Feed', path: '/products'),
-    _TabItem(icon: CupertinoIcons.bag_fill,        label: 'Activity', path: '/cart'),
-    _TabItem(icon: CupertinoIcons.person_fill,     label: 'You',      path: '/profile'),
+  static final _buyerTabs = [
+    _TabItem(icon: LucideIcons.home,        label: 'Home',   path: '/'),
+    _TabItem(icon: LucideIcons.search,      label: 'Shop',   path: '/products'),
+    _TabItem(icon: LucideIcons.trendingUp,  label: 'Trends', path: '/trends'),
+    _TabItem(icon: LucideIcons.shoppingBag, label: 'Cart',   path: '/cart'),
+    _TabItem(icon: LucideIcons.user,        label: 'Me',     path: '/profile'),
   ];
 
-  static const _vendorTabs = [
-    _TabItem(icon: CupertinoIcons.house_fill,      label: 'Main',     path: '/'),
-    _TabItem(icon: CupertinoIcons.square_grid_2x2_fill, label: 'Stock', path: '/vendor/products'),
-    _TabItem(icon: CupertinoIcons.cube_box_fill,   label: 'Orders',   path: '/vendor/orders'),
-    _TabItem(icon: CupertinoIcons.person_fill,     label: 'You',      path: '/profile'),
+  static final _vendorTabs = [
+    _TabItem(icon: LucideIcons.home,     label: 'Main',   path: '/'),
+    _TabItem(icon: LucideIcons.package2, label: 'Stock',  path: '/vendor/products'),
+    _TabItem(icon: LucideIcons.clipboardList, label: 'Orders', path: '/vendor/orders'),
+    _TabItem(icon: LucideIcons.user,     label: 'Me',     path: '/profile'),
   ];
 
-  static const _courierTabs = [
-    _TabItem(icon: CupertinoIcons.house_fill,      label: 'Home',     path: '/courier'),
-    _TabItem(icon: Icons.inventory_2_outlined,     label: 'Pickups',  path: '/courier/pickups'),
-    _TabItem(icon: Icons.local_shipping_outlined,  label: 'Deliver',  path: '/courier/deliveries'),
-    _TabItem(icon: CupertinoIcons.person_fill,     label: 'You',      path: '/profile'),
+  static final _courierTabs = [
+    _TabItem(icon: LucideIcons.home,      label: 'Home',    path: '/courier'),
+    _TabItem(icon: LucideIcons.package2,  label: 'Pickups', path: '/courier/pickups'),
+    _TabItem(icon: LucideIcons.truck,     label: 'Deliver', path: '/courier/deliveries'),
+    _TabItem(icon: LucideIcons.user,      label: 'Me',      path: '/profile'),
   ];
 
-  static const _staffTabs = [
-    _TabItem(icon: CupertinoIcons.house_fill,      label: 'Main',     path: '/'),
-    _TabItem(icon: CupertinoIcons.chart_pie_fill,  label: 'Ops',      path: '/admin'),
-    _TabItem(icon: CupertinoIcons.house_fill, label: 'Stores',   path: '/stores'),
-    _TabItem(icon: CupertinoIcons.person_fill,     label: 'You',      path: '/profile'),
+  static final _staffTabs = [
+    _TabItem(icon: LucideIcons.home,       label: 'Main',   path: '/'),
+    _TabItem(icon: LucideIcons.barChart3,  label: 'Ops',    path: '/admin'),
+    _TabItem(icon: LucideIcons.store,      label: 'Stores', path: '/stores'),
+    _TabItem(icon: LucideIcons.user,       label: 'Me',     path: '/profile'),
   ];
 
   @override
@@ -71,7 +72,7 @@ class MainShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: _OsNavBar(
+      bottomNavigationBar: _ChinaStallNavBar(
         tabs: tabs,
         currentIndex: currentIndex,
         cartCount: cart.count,
@@ -83,14 +84,14 @@ class MainShell extends StatelessWidget {
   }
 }
 
-// ─── Black pill bottom nav matching React prototype ──────────────────────────
-class _OsNavBar extends StatelessWidget {
+// ─── Floating dark pill bottom nav ──────────────────────────────────────────
+class _ChinaStallNavBar extends StatelessWidget {
   final List<_TabItem> tabs;
   final int currentIndex;
   final int cartCount;
   final ValueChanged<int> onTap;
 
-  const _OsNavBar({
+  const _ChinaStallNavBar({
     required this.tabs,
     required this.currentIndex,
     required this.cartCount,
@@ -103,7 +104,7 @@ class _OsNavBar extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
         child: Container(
-          height: 64,
+          height: 68,
           decoration: BoxDecoration(
             color: AppColors.navBg,
             borderRadius: BorderRadius.circular(28),
@@ -120,61 +121,73 @@ class _OsNavBar extends StatelessWidget {
               final i = entry.key;
               final tab = entry.value;
               final isSelected = i == currentIndex;
-              final showBadge = tab.path == '/cart' && cartCount > 0;
+              final isCart = tab.path == '/cart';
+              final showBadge = isCart && cartCount > 0;
 
               return Expanded(
                 child: GestureDetector(
                   onTap: () => onTap(i),
                   behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Icon with optional badge
-                        showBadge
-                            ? badges.Badge(
-                                badgeContent: Text(
-                                  '$cartCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Active glow pill behind icon
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AnimatedScale(
+                          scale: isSelected ? 1.1 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: showBadge
+                              ? badges.Badge(
+                                  badgeContent: Text(
+                                    '$cartCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                    ),
                                   ),
-                                ),
-                                badgeStyle: const badges.BadgeStyle(
-                                  badgeColor: AppColors.primary,
-                                  padding: EdgeInsets.all(3),
-                                ),
-                                child: Icon(
+                                  badgeStyle: const badges.BadgeStyle(
+                                    badgeColor: AppColors.primary,
+                                    padding: EdgeInsets.all(3),
+                                  ),
+                                  child: Icon(
+                                    tab.icon,
+                                    size: 24,
+                                    color: isSelected
+                                        ? AppColors.white
+                                        : const Color(0x80FFFFFF),
+                                  ),
+                                )
+                              : Icon(
                                   tab.icon,
-                                  size: 20,
+                                  size: 24,
                                   color: isSelected
                                       ? AppColors.white
-                                      : const Color(0x4DFFFFFF),
+                                      : const Color(0x80FFFFFF),
                                 ),
-                              )
-                            : Icon(
-                                tab.icon,
-                                size: 20,
-                                color: isSelected
-                                    ? AppColors.white
-                                    : const Color(0x4DFFFFFF),
-                              ),
-
-                        // Active dot indicator (white dot below active icon)
-                        const SizedBox(height: 4),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: isSelected ? 4 : 0,
-                          height: isSelected ? 4 : 0,
-                          decoration: const BoxDecoration(
-                            color: AppColors.white,
-                            shape: BoxShape.circle,
+                        ),
+                      ),
+                      // Label
+                      const SizedBox(height: 2),
+                      if (isSelected)
+                        Text(
+                          tab.label,
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               );

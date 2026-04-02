@@ -411,10 +411,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Widget _categoryPicker() {
     const cats = <String, String>{
-      'clothing': '👘 Clothing', 'shoes': '👟 Shoes', 'accessories': '💍 Accessories',
-      'sportswear': '⚽ Sportswear', 'bags': '👜 Bags', 'blankets': '🛏 Blankets',
-      'furniture': '🛋 Furniture', 'carpets': '🪞 Carpets', 'kitchen': '🍳 Kitchen',
-      'toys': '🧸 Toys', 'electronics': '📱 Electronics',
+      'clothing': 'Clothing', 'shoes': 'Shoes', 'accessories': 'Accessories',
+      'sportswear': 'Sportswear', 'bags': 'Bags', 'blankets': 'Blankets',
+      'furniture': 'Furniture', 'carpets': 'Carpets', 'kitchen': 'Kitchen',
+      'toys': 'Toys', 'electronics': 'Electronics',
     };
     return DropdownButtonFormField<String>(
       value: _category,

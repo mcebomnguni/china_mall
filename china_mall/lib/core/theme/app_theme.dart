@@ -3,71 +3,96 @@ import 'package:flutter/services.dart';
 
 class AppColors {
   static const white = Color(0xFFFFFFFF);
-  static const black = Color(0xFF08120D);
+  static const black = Color(0xFF1F2937);
 
-  static const green900 = Color(0xFF0E3B2B);
-  static const green800 = Color(0xFF135238);
-  static const green700 = Color(0xFF1D6B46);
-  static const green600 = Color(0xFF2D8A57);
-  static const green500 = Color(0xFF44A66D);
-  static const green100 = Color(0xFFDCEFE2);
-  static const green050 = Color(0xFFF4FBF6);
+  // ── Primary reds ──────────────────────────────────────────────────────────
+  static const Color primary = Color(0xFFD42B2B);
+  static const Color primaryDark = Color(0xFFB91C1C);
+  static const Color primaryLight = Color(0xFFFEE2E2);
 
-  static const background = Color(0xFFF6FBF7);
-  static const surface = Color(0xFFFFFFFF);
-  static const surfaceVariant = Color(0xFFEAF5EE);
-  static const border = Color(0xFFCCE2D4);
+  // ── Accent gold ───────────────────────────────────────────────────────────
+  static const Color accent = Color(0xFFD4A843);
+  static const Color accentLight = Color(0xFFFEF3C7);
 
-  static const darkBackground = Color(0xFF07110C);
-  static const darkSurface = Color(0xFF102019);
-  static const darkSurfaceVariant = Color(0xFF173227);
-  static const darkBorder = Color(0xFF274939);
+  // ── Surfaces ──────────────────────────────────────────────────────────────
+  static const Color background = Color(0xFFFAF8F5);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceVariant = Color(0xFFF5F0EB);
 
-  static const success = Color(0xFF2D8A57);
-  static const warning = Color(0xFFC98B2E);
-  static const error = Color(0xFFB94848);
-  static const info = Color(0xFF3E7BFA);
+  // ── Nav bar ───────────────────────────────────────────────────────────────
+  static const Color navBg = Color(0xFF2D1A1A);
 
-  static const textPrimary = Color(0xFF102019);
-  static const textSecondary = Color(0xFF547161);
-  static const textTertiary = Color(0xFF809486);
+  // ── Borders & dividers ────────────────────────────────────────────────────
+  static const Color border = Color(0xFFE5E7EB);
+  static const Color divider = Color(0xFFF3F4F6);
+  static const Color cardShadow = Color(0x0A000000);
 
-  static const darkTextPrimary = Color(0xFFF1F7F2);
-  static const darkTextSecondary = Color(0xFFBCD0C1);
-  static const darkTextTertiary = Color(0xFF89A291);
+  // ── Text ──────────────────────────────────────────────────────────────────
+  static const Color textPrimary = Color(0xFF1F2937);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textTertiary = Color(0xFF9CA3AF);
 
-  static const storeColor = Color(0xFF1D6B46);
+  // ── Semantic ──────────────────────────────────────────────────────────────
+  static const Color success = Color(0xFF16A34A);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color error = Color(0xFFDC2626);
+  static const Color info = Color(0xFF3E7BFA);
+  static const Color starRating = Color(0xFFF59E0B);
+
+  // ── Dark mode surfaces ────────────────────────────────────────────────────
+  static const darkBackground = Color(0xFF1A1010);
+  static const darkSurface = Color(0xFF241818);
+  static const darkSurfaceVariant = Color(0xFF2E1F1F);
+  static const darkBorder = Color(0xFF4A3333);
+
+  static const darkTextPrimary = Color(0xFFF5F0EB);
+  static const darkTextSecondary = Color(0xFFD4C4B8);
+  static const darkTextTertiary = Color(0xFFA08E82);
+
+  // ── Role colors ───────────────────────────────────────────────────────────
+  static const storeColor = Color(0xFFD42B2B);
   static const courierColor = Color(0xFF377B78);
   static const adminColor = Color(0xFF215D7C);
 
-  static const navBg = Color(0xFF133523);
+  // ── Gradients ─────────────────────────────────────────────────────────────
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFFD42B2B), Color(0xFFE85D3A)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient promoBannerGradient = LinearGradient(
+    colors: [Color(0xFFD42B2B), Color(0xFFC41E1E), Color(0xFFB91C1C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFFF7FCF8), Color(0xFFE0F1E4), Color(0xFFCFE8D8)],
+    colors: [Color(0xFFFAF8F5), Color(0xFFFEE2E2), Color(0xFFFEF3C7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient darkHeroGradient = LinearGradient(
-    colors: [Color(0xFF08120D), Color(0xFF123322), Color(0xFF18492E)],
+    colors: [Color(0xFF1A1010), Color(0xFF2E1515), Color(0xFF3D1A1A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient gradientRed = LinearGradient(
-    colors: [green700, green500],
+    colors: [Color(0xFFD42B2B), Color(0xFFE85D3A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient gradientBlack = LinearGradient(
-    colors: [green900, green700],
+    colors: [Color(0xFF2D1A1A), Color(0xFFD42B2B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient gradientStore = LinearGradient(
-    colors: [green700, Color(0xFF56B67A)],
+    colors: [Color(0xFFD42B2B), Color(0xFFE85D3A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -86,15 +111,10 @@ class AppColors {
 
   static const gradientDark = gradientBlack;
   static const gradientGold = LinearGradient(
-    colors: [Color(0xFF79B86D), Color(0xFF3F8F56)],
+    colors: [Color(0xFFD4A843), Color(0xFFB8922F)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  static const accentLight = green050;
-  static const accent = green500;
-  static const primary = green700;
-  static const primaryDark = green900;
-  static const primaryLight = green100;
 }
 
 class AppTheme {
@@ -104,7 +124,7 @@ class AppTheme {
       brightness: Brightness.light,
       surface: AppColors.surface,
       primary: AppColors.primary,
-      secondary: AppColors.green500,
+      secondary: AppColors.accent,
       error: AppColors.error,
     );
 
@@ -177,7 +197,7 @@ class AppTheme {
           minimumSize: const Size.fromHeight(56),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
           ),
           textStyle: const TextStyle(
             fontFamily: 'Satoshi',
@@ -190,10 +210,10 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary),
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
           minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -203,7 +223,7 @@ class AppTheme {
         thickness: 1,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.green050,
+        backgroundColor: AppColors.primaryLight,
         selectedColor: AppColors.primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -227,11 +247,11 @@ class AppTheme {
 
   static ThemeData get dark {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.green500,
+      seedColor: AppColors.primary,
       brightness: Brightness.dark,
       surface: AppColors.darkSurface,
-      primary: AppColors.green500,
-      secondary: AppColors.green100,
+      primary: AppColors.primary,
+      secondary: AppColors.accent,
       error: AppColors.error,
     );
 
@@ -282,7 +302,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.green500, width: 1.8),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -298,22 +318,22 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.green500,
-          foregroundColor: AppColors.black,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
           minimumSize: const Size.fromHeight(56),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.green100,
-          side: const BorderSide(color: AppColors.green500),
+          foregroundColor: AppColors.primaryLight,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
           minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -324,7 +344,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.darkSurfaceVariant,
-        selectedColor: AppColors.green500,
+        selectedColor: AppColors.primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide.none,

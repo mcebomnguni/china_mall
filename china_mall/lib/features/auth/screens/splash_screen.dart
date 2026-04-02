@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -185,7 +186,13 @@ class _SplashScreenState extends State<SplashScreen>
 
   Widget _buildShoppingBags() {
     final t = _ctrl.value;
-    const bags = ['🛍️', '👜', '🛒', '🎒', '👝'];
+    const bags = [
+      LucideIcons.shoppingBag,
+      LucideIcons.luggage,
+      LucideIcons.shoppingCart,
+      LucideIcons.package,
+      LucideIcons.gift,
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -204,9 +211,10 @@ class _SplashScreenState extends State<SplashScreen>
               scale: 0.5 + bagProgress * 0.5,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Text(
+                child: Icon(
                   bags[i],
-                  style: TextStyle(fontSize: 32 + (i % 2) * 10.0),
+                  size: 32 + (i % 2) * 10.0,
+                  color: Colors.white,
                 ),
               ),
             ),

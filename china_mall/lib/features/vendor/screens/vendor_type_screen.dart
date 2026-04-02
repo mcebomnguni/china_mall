@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -33,7 +34,7 @@ class VendorTypeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('🏪', style: TextStyle(fontSize: 44)),
+                    const Icon(LucideIcons.store, size: 44, color: AppColors.primary),
                     const SizedBox(height: 14),
                     Text(
                       'Welcome, $name!',

@@ -37,6 +37,7 @@ import '../../features/courier/screens/pickup_detail_screen.dart';
 import '../../features/courier/screens/active_deliveries_screen.dart';
 import '../../features/courier/screens/delivery_handoff_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
+import '../../features/trends/screens/trends_screen.dart';
 import '../../main_shell.dart';
 import '../../core/widgets/error_widgets.dart';
 import '../../features/auth/screens/onboarding_screen.dart';
@@ -158,6 +159,9 @@ GoRouter createRouter(AuthProvider auth) {
               path: '/stores/:id',
               builder: (_, state) => StoreDetailScreen(
                   id: int.parse(state.pathParameters['id']!))),
+          GoRoute(
+              path: '/trends',
+              builder: (_, __) => const TrendsScreen()),
           GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
           GoRoute(
               path: '/orders', builder: (_, __) => const OrdersScreen()),

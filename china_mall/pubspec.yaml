@@ -71,6 +71,8 @@ dependencies:
   # ─── Icons & Fonts ──────────────────────────────────────────────────────
   cupertino_icons: ^1.0.8
   supabase_flutter: ^1.5.0
+  lucide_icons: ^0.257.0
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:

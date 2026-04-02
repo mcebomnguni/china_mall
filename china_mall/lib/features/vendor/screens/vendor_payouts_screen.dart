@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -111,8 +112,7 @@ class _VendorPayoutsScreenState extends State<VendorPayoutsScreen> {
                               ],
                             ),
                           ),
-                          const Text('💰',
-                              style: TextStyle(fontSize: 40)),
+                          const Icon(LucideIcons.wallet, size: 36, color: AppColors.primary),
                         ],
                       ),
                     ),

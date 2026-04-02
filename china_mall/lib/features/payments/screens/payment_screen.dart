@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/api/api_service.dart';
@@ -200,7 +201,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
               child: Row(
                 children: [
-                  const Text('🧪', style: TextStyle(fontSize: 18)),
+                  const Icon(LucideIcons.testTube2, size: 18, color: AppColors.warning),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
