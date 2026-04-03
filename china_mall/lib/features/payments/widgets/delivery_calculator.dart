@@ -152,7 +152,7 @@ class _DeliveryCalculatorState extends State<DeliveryCalculator> {
               ),
             );
           }),
-          if (widget.subtotal >= 500)
+          if (widget.subtotal >= 750)
             const Padding(
               padding: EdgeInsets.only(top: 4),
               child: Row(
@@ -161,7 +161,7 @@ class _DeliveryCalculatorState extends State<DeliveryCalculator> {
                       size: 13, color: AppColors.success),
                   SizedBox(width: 6),
                   Text(
-                    'Orders over R500 qualify for free standard delivery!',
+                    'Orders over R750 qualify for free standard delivery!',
                     style: TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 11,

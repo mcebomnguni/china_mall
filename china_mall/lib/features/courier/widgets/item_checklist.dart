@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/pickup_assignment.dart';
@@ -50,21 +51,25 @@ class ItemChecklist extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        ...items.map((item) => _ItemRow(
-              item: item,
-              onToggle: () => onToggleItem(item.id),
-              onMarkMissing: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => MissingItemSheet(
-                    itemName: item.productName,
-                    onSubmit: (note) => onMarkMissing(item.id, note),
-                  ),
-                );
-              },
-            )),
+        for (int index = 0; index < items.length; index++)
+          _ItemRow(
+            item: items[index],
+            onToggle: () => onToggleItem(items[index].id),
+            onMarkMissing: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => MissingItemSheet(
+                  itemName: items[index].productName,
+                  onSubmit: (note) => onMarkMissing(items[index].id, note),
+                ),
+              );
+            },
+          )
+              .animate(delay: Duration(milliseconds: 40 * index))
+              .fadeIn(duration: 250.ms)
+              .slideX(begin: 0.1, end: 0),
       ],
     );
   }

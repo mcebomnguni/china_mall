@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../constants/product_images.dart';
 import '../../../data/mock_trends.dart';
@@ -226,7 +228,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     ),
                   ),
                 ),
-              ),
+              ).animate().fadeIn(duration: 300.ms),
             ),
 
             // Photo category grid
@@ -245,11 +247,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   itemCount: categoryPhotos.length,
                   itemBuilder: (_, i) {
                     final cat = categoryPhotos[i];
-                    return _PhotoCategoryCard(
-                      label: cat['label']!,
-                      imageUrl: cat['image']!,
+                    return Pressable(
+                      scaleFactor: 0.97,
                       onTap: () => _selectCategory(cat['slug']!),
-                    );
+                      child: _PhotoCategoryCard(
+                        label: cat['label']!,
+                        imageUrl: cat['image']!,
+                        onTap: () => _selectCategory(cat['slug']!),
+                      ),
+                    ).animate(delay: Duration(milliseconds: 50 * i)).fadeIn(duration: 350.ms).scaleXY(begin: 0.95, end: 1.0, curve: Curves.easeOutCubic);
                   },
                 ),
               ),
@@ -349,7 +355,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           setState(() => _selectedCategory = null);
                           _load();
                         },
-                      );
+                      ).animate(delay: Duration(milliseconds: 30 * i)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
                     }
                     final cat = AppConstants.categories[i - 1];
                     final sel = _selectedCategory == cat['slug'];
@@ -358,7 +364,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       icon: AppConstants.categoryIcon(cat['slug']!),
                       selected: sel,
                       onTap: () => _selectCategory(cat['slug']!),
-                    );
+                    ).animate(delay: Duration(milliseconds: 30 * i)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
                   },
                 ),
               ),
@@ -392,11 +398,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               );
                             }
                             final p = _products[i];
-                            return _ProductTile(
-                              product: p,
+                            return Pressable(
+                              scaleFactor: 0.97,
                               onTap: () =>
                                   context.go('/products/${p['id']}'),
-                            );
+                              child: _ProductTile(
+                                product: p,
+                                onTap: () =>
+                                    context.go('/products/${p['id']}'),
+                              ),
+                            ).animate(delay: Duration(milliseconds: 50 * i)).fadeIn(duration: 350.ms, curve: Curves.easeOutCubic).slideY(begin: 0.1, end: 0, duration: 350.ms, curve: Curves.easeOutCubic);
                           },
                         ),
                       ),
@@ -473,7 +484,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       icon: LucideIcons.layoutGrid,
                       selected: sel,
                       onTap: _clearCategory,
-                    );
+                    ).animate(delay: Duration(milliseconds: 30 * i)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
                   }
                   final cat = AppConstants.categories[i - 1];
                   final sel = _selectedCategory == cat['slug'];
@@ -482,7 +493,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     icon: AppConstants.categoryIcon(cat['slug']!),
                     selected: sel,
                     onTap: () => _selectCategory(cat['slug']!),
-                  );
+                  ).animate(delay: Duration(milliseconds: 30 * i)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
                 },
               ),
             ),
@@ -518,11 +529,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 );
                               }
                               final p = _products[i];
-                              return _ProductTile(
-                                product: p,
+                              return Pressable(
+                                scaleFactor: 0.97,
                                 onTap: () =>
                                     context.go('/products/${p['id']}'),
-                              );
+                                child: _ProductTile(
+                                  product: p,
+                                  onTap: () =>
+                                      context.go('/products/${p['id']}'),
+                                ),
+                              ).animate(delay: Duration(milliseconds: 50 * i)).fadeIn(duration: 350.ms, curve: Curves.easeOutCubic).slideY(begin: 0.1, end: 0, duration: 350.ms, curve: Curves.easeOutCubic);
                             },
                           ),
                         ),
@@ -878,13 +894,16 @@ class _ProductTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: AppNetworkImage(
-                    url: product['image'], fit: BoxFit.cover),
+            Hero(
+              tag: 'product-image-${product['id']}',
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: AppNetworkImage(
+                      url: product['image'], fit: BoxFit.cover),
+                ),
               ),
             ),
             Padding(

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
@@ -108,17 +109,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Create account'),
                       ),
                     ],
-                  ),
+                  )
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: -0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
                   const SizedBox(height: 30),
                   Text(
                     'Secure sign in',
                     style: theme.textTheme.displaySmall,
-                  ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 100.ms, duration: 400.ms)
+                      .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
                   const SizedBox(height: 12),
                   Text(
                     'Biometric login, protected payments and role-based dashboards are now tied to your Supabase account.',
                     style: theme.textTheme.bodyMedium,
-                  ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 200.ms, duration: 400.ms),
                   const SizedBox(height: 28),
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -192,7 +201,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                  ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 300.ms, duration: 500.ms, curve: Curves.easeOutCubic)
+                      .slideY(begin: 0.08, end: 0, delay: 300.ms, duration: 500.ms, curve: Curves.easeOutCubic),
                   const SizedBox(height: 22),
                   Container(
                     width: double.infinity,
@@ -216,7 +228,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                  ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 500.ms, duration: 400.ms),
                 ],
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_theme.dart';
 
 class VerificationCodeInput extends StatefulWidget {
@@ -26,6 +27,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
   late List<FocusNode> _focusNodes;
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
+  bool _allFilled = false;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
       for (final c in _controllers) {
         c.clear();
       }
+      setState(() => _allFilled = false);
       _focusNodes[0].requestFocus();
     }
   }
@@ -91,7 +94,11 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
 
     // Check if all fields are filled
     final code = _controllers.map((c) => c.text).join();
-    if (code.length == widget.codeLength) {
+    final filled = code.length == widget.codeLength;
+    if (filled != _allFilled) {
+      setState(() => _allFilled = filled);
+    }
+    if (filled) {
       widget.onCodeComplete(code);
     }
   }
@@ -123,9 +130,22 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
             padding: EdgeInsets.only(
               right: index < widget.codeLength - 1 ? 8 : 0,
             ),
-            child: SizedBox(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
               width: 48,
               height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: _allFilled
+                    ? [
+                        BoxShadow(
+                          color: AppColors.success.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : [],
+              ),
               child: KeyboardListener(
                 focusNode: FocusNode(),
                 onKeyEvent: (event) => _onKey(index, event),
@@ -161,7 +181,9 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
                       borderSide: BorderSide(
                         color: widget.hasError
                             ? AppColors.error
-                            : AppColors.border,
+                            : _allFilled
+                                ? AppColors.success
+                                : AppColors.border,
                         width: 1.5,
                       ),
                     ),
@@ -182,7 +204,10 @@ class _VerificationCodeInputState extends State<VerificationCodeInput>
                 ),
               ),
             ),
-          );
+          )
+              .animate(delay: Duration(milliseconds: 50 * index))
+              .fadeIn(duration: 200.ms)
+              .scaleXY(begin: 0.8, end: 1.0);
         }),
       ),
     );

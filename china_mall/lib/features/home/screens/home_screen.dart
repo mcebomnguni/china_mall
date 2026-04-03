@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/shared_widgets.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../data/mock_trends.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -29,8 +31,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _bannerIdx = 0;
   Timer? _bannerTimer;
 
-  // Staggered fade-in
-  bool _showContent = false;
 
   @override
   void initState() {
@@ -62,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _load() async {
     setState(() {
       _loading = true;
-      _showContent = false;
     });
     try {
       final r = await Future.wait([
@@ -112,10 +111,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _loading = false;
       });
 
-      // Trigger staggered fade-in after data loads
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) setState(() => _showContent = true);
-      });
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -137,9 +132,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     })
                 .toList();
           }
-        });
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) setState(() => _showContent = true);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -489,7 +481,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         itemBuilder: (_, i) {
           final cat = AppConstants.categories[i];
           final iconData = AppConstants.categoryIcon(cat['slug']!);
-          return GestureDetector(
+          return Pressable(
+            scaleFactor: 0.95,
             onTap: () => context.go('/products?category=${cat['slug']}'),
             child: Container(
               width: 72,
@@ -530,7 +523,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-          );
+          )
+              .animate(delay: Duration(milliseconds: 40 * i))
+              .fadeIn(duration: 250.ms, curve: Curves.easeOutCubic)
+              .slideX(begin: 0.15, end: 0, duration: 250.ms, curve: Curves.easeOutCubic);
         },
       ),
     );
@@ -578,20 +574,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: products.length,
         itemBuilder: (_, i) {
-          return AnimatedOpacity(
-            opacity: _showContent ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOut,
-            child: AnimatedPadding(
-              padding: EdgeInsets.only(top: _showContent ? 0 : 12),
-              duration: Duration(milliseconds: 400 + (i * 80)),
-              curve: Curves.easeOut,
-              child: _ProductCard(
-                product: products[i],
-                onTap: () => context.go('/products/${products[i]['id']}'),
-              ),
+          return Pressable(
+            scaleFactor: 0.97,
+            onTap: () => context.go('/products/${products[i]['id']}'),
+            child: _ProductCard(
+              product: products[i],
+              onTap: () => context.go('/products/${products[i]['id']}'),
             ),
-          );
+          )
+              .animate(delay: Duration(milliseconds: 50 * i))
+              .fadeIn(duration: 350.ms, curve: Curves.easeOutCubic)
+              .slideY(begin: 0.12, end: 0, duration: 350.ms, curve: Curves.easeOutCubic)
+              .scaleXY(begin: 0.96, end: 1.0, duration: 350.ms, curve: Curves.easeOutCubic);
         },
       ),
     );
@@ -608,15 +602,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         itemCount: _stores.length,
         itemBuilder: (_, i) {
           final s = _stores[i];
-          return AnimatedOpacity(
-            opacity: _showContent ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOut,
+          return Pressable(
+            scaleFactor: 0.97,
+            onTap: () => context.go('/stores/${s['id']}'),
             child: _StoreCard(
               store: s,
               onTap: () => context.go('/stores/${s['id']}'),
             ),
-          );
+          )
+              .animate(delay: Duration(milliseconds: 50 * i))
+              .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+              .slideX(begin: 0.15, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
         },
       ),
     );
@@ -669,57 +665,60 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image with discount badge
+            // Image with discount badge + Hero animation
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: imageUrl != null && imageUrl.startsWith('http')
-                      ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          width: 150,
-                          height: 130,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
+                Hero(
+                  tag: 'product-image-${product['id']}',
+                  child: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: imageUrl != null && imageUrl.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
                             width: 150,
                             height: 130,
-                            color: const Color(0xFFF0F0F0),
-                            child: const Center(
-                              child: Icon(CupertinoIcons.photo,
-                                  color: Color(0xFFCCCCCC)),
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => Container(
+                              width: 150,
+                              height: 130,
+                              color: const Color(0xFFF0F0F0),
+                              child: const Center(
+                                child: Icon(CupertinoIcons.photo,
+                                    color: Color(0xFFCCCCCC)),
+                              ),
                             ),
-                          ),
-                          errorWidget: (_, __, ___) => Container(
+                            errorWidget: (_, __, ___) => Container(
+                              width: 150,
+                              height: 130,
+                              color: const Color(0xFFF0F0F0),
+                              child: const Center(
+                                child: Icon(CupertinoIcons.photo,
+                                    color: Color(0xFFCCCCCC)),
+                              ),
+                            ),
+                          )
+                        : Container(
                             width: 150,
                             height: 130,
-                            color: const Color(0xFFF0F0F0),
-                            child: const Center(
-                              child: Icon(CupertinoIcons.photo,
-                                  color: Color(0xFFCCCCCC)),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0F0F0),
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(12)),
+                              image: imageUrl != null
+                                  ? DecorationImage(
+                                      image: AssetImage(imageUrl),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
-                          ),
-                        )
-                      : Container(
-                          width: 150,
-                          height: 130,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0F0F0),
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(12)),
-                            image: imageUrl != null
-                                ? DecorationImage(
-                                    image: AssetImage(imageUrl),
-                                    fit: BoxFit.cover,
-                                  )
+                            child: imageUrl == null
+                                ? const Center(
+                                    child: Icon(CupertinoIcons.photo,
+                                        color: Color(0xFFCCCCCC)))
                                 : null,
                           ),
-                          child: imageUrl == null
-                              ? const Center(
-                                  child: Icon(CupertinoIcons.photo,
-                                      color: Color(0xFFCCCCCC)))
-                              : null,
-                        ),
+                  ),
                 ),
                 if (discount > 0)
                   Positioned(

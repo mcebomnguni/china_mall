@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -21,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _user    = TextEditingController();
   final _pass    = TextEditingController();
   final _confirm = TextEditingController();
+  final _referralCodeCtrl = TextEditingController();
   String _role   = 'buyer';
   bool _obscure  = true;
   
@@ -35,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    for (final c in [_fname, _lname, _email, _user, _pass, _confirm]) {
+    for (final c in [_fname, _lname, _email, _user, _pass, _confirm, _referralCodeCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -70,6 +72,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (ok) {
+      if (_referralCodeCtrl.text.isNotEmpty) {
+        debugPrint('[Referral] User registered with referral code: ${_referralCodeCtrl.text}');
+      }
       if (_role == 'vendor') {
         // Auto-login vendor and take them straight to store setup
         final loginOk = await auth.login(_email.text.trim(), _pass.text);
@@ -205,7 +210,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 10),
                 _Field(ctrl: _confirm, hint: 'Confirm Password', obscure: true, validator: (v) => Validators.confirmPassword(v, _pass.text)),
-                
+
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _referralCodeCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Referral Code (optional)',
+                    hintText: 'Have a referral code? Enter it here',
+                    prefixIcon: const Icon(LucideIcons.ticket, size: 18),
+                  ),
+                ),
+
                 const SizedBox(height: 20),
 
                 // Privacy Policy Toggle

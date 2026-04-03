@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
+import '../../../core/widgets/write_review_sheet.dart';
  
 class OrderDetailScreen extends StatefulWidget {
   final int id;
@@ -18,6 +20,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool   _loading    = true;
   bool   _cancelling = false;
   bool   _loadError  = false; // distinguish network error from "not found"
+  bool   _reviewDismissed = false;
  
   @override
   void initState() {
@@ -180,7 +183,105 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
- 
+
+            // ── Review prompt (delivered orders) ──────────────────
+            if (status == 'delivered' && !_reviewDismissed) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(LucideIcons.star, size: 22, color: const Color(0xFFD97706)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'How was your experience?',
+                            style: TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Leave a review to help other shoppers',
+                            style: TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              SizedBox(
+                                height: 32,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    final firstItem = (items.isNotEmpty) ? items.first : null;
+                                    final productId = firstItem?['product']?['id'];
+                                    if (productId != null) {
+                                      WriteReviewSheet.show(
+                                        context,
+                                        targetId: productId,
+                                        type: ReviewType.product,
+                                        targetName: firstItem?['product']?['name'] ?? 'Product',
+                                        onSubmitted: () => setState(() => _reviewDismissed = true),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  child: const Text('Write a Review'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              SizedBox(
+                                height: 32,
+                                child: TextButton(
+                                  onPressed: () => setState(() => _reviewDismissed = true),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.textTertiary,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    textStyle: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  child: const Text('Maybe Later'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // ── Status card ────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(16),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/shared_widgets.dart';
 import '../../../core/widgets/skeleton_widgets.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../cart/providers/cart_provider.dart';
  
 class ProductDetailScreen extends StatefulWidget {
@@ -136,11 +138,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: AppNetworkImage(
-                url: _product!['image'],
-                width: double.infinity,
-                height: 320,
-                fit: BoxFit.cover,
+              background: Hero(
+                tag: 'product-image-${widget.id}',
+                child: AppNetworkImage(
+                  url: _product!['image'],
+                  width: double.infinity,
+                  height: 320,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -161,7 +166,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
- 
+
                         // Category pill
                         if (_product!['category'] != null)
                           Container(
@@ -180,17 +185,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
+                          )
+                              .animate()
+                              .fadeIn(delay: 100.ms, duration: 300.ms)
+                              .slideX(begin: -0.1, end: 0, duration: 300.ms),
                         const SizedBox(height: 10),
- 
+
                         Text(
                           _product!['name'] ?? '',
                           style: Theme.of(context)
                               .textTheme
                               .headlineMedium,
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 150.ms, duration: 300.ms)
+                            .slideY(begin: 0.1, end: 0, duration: 300.ms),
                         const SizedBox(height: 8),
- 
+
                         Row(
                           children: [
                             PriceText(price: price, large: true),
@@ -205,7 +216,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 size: 16,
                               ),
                           ],
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 200.ms, duration: 300.ms)
+                            .slideY(begin: 0.1, end: 0, duration: 300.ms),
                         const SizedBox(height: 16),
  
                         // Store card
@@ -421,7 +435,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         itemCount: related.length,
                         itemBuilder: (_, i) {
                           final rp = related[i] as Map;
-                          return GestureDetector(
+                          return Pressable(
+                            scaleFactor: 0.97,
                             onTap: () => context
                                 .go('/products/${rp['id']}'),
                             child: Container(
@@ -485,7 +500,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ],
                               ),
                             ),
-                          );
+                          )
+                              .animate(delay: Duration(milliseconds: 50 * i))
+                              .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                              .slideX(begin: 0.15, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
                         },
                       ),
                     ),
@@ -516,15 +534,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: AppButton(
-                label: inStock ? 'Add to Cart' : 'Out of Stock',
+              child: Pressable(
+                scaleFactor: 0.97,
+                enableHaptic: true,
                 onTap: inStock ? _addToCart : null,
-                icon: CupertinoIcons.cart_badge_plus,
+                child: AppButton(
+                  label: inStock ? 'Add to Cart' : 'Out of Stock',
+                  onTap: inStock ? _addToCart : null,
+                  icon: CupertinoIcons.cart_badge_plus,
+                ),
               ),
             ),
           ],
         ),
-      ),
+      )
+          .animate()
+          .fadeIn(delay: 300.ms, duration: 350.ms)
+          .slideY(begin: 0.3, end: 0, duration: 350.ms, curve: Curves.easeOutCubic),
     );
   }
 }

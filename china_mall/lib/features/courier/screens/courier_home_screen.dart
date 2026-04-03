@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/pressable.dart';
 import '../models/delivery_task.dart';
 import '../services/courier_mock_data.dart';
 import '../utils/batch_utils.dart';
@@ -177,9 +179,13 @@ class _CourierHomeScreenState extends State<CourierHomeScreen>
             if (_isOnline && activeCount > 0) ...[
               SlideTransition(
                 position: _deliverySlideAnimation,
-                child: _buildActiveDeliveryCard(
-                  activeCount: activeCount,
-                  nextDelivery: nextDelivery!,
+                child: Pressable(
+                  scaleFactor: 0.98,
+                  onTap: () => context.push('/courier/deliveries'),
+                  child: _buildActiveDeliveryCard(
+                    activeCount: activeCount,
+                    nextDelivery: nextDelivery!,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -242,6 +248,13 @@ class _CourierHomeScreenState extends State<CourierHomeScreen>
                 : AppColors.textTertiary.withValues(alpha: 0.4),
             width: 1.5,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.success.withValues(alpha: _isOnline ? 0.3 : 0),
+              blurRadius: _isOnline ? 20 : 0,
+              spreadRadius: _isOnline ? 2 : 0,
+            ),
+          ],
         ),
         child: _isOnline ? _buildOnlineContent() : _buildOfflineContent(),
       ),
@@ -450,34 +463,38 @@ class _CourierHomeScreenState extends State<CourierHomeScreen>
   }
 
   Widget _buildStatsRow() {
+    final stats = [
+      _StatCard(
+        icon: LucideIcons.package,
+        value: CourierMockData.pickupsToday.toDouble(),
+        label: 'Pickups',
+        isCurrency: false,
+      ),
+      _StatCard(
+        icon: LucideIcons.truck,
+        value: CourierMockData.deliveriesToday.toDouble(),
+        label: 'Deliveries',
+        isCurrency: false,
+      ),
+      _StatCard(
+        icon: LucideIcons.wallet,
+        value: CourierMockData.earningsToday,
+        label: 'Earnings',
+        isCurrency: true,
+      ),
+    ];
+
     return Row(
       children: [
-        Expanded(
-          child: _StatCard(
-            icon: LucideIcons.package,
-            value: CourierMockData.pickupsToday.toDouble(),
-            label: 'Pickups',
-            isCurrency: false,
+        for (int index = 0; index < stats.length; index++) ...[
+          if (index > 0) const SizedBox(width: 10),
+          Expanded(
+            child: stats[index]
+                .animate(delay: Duration(milliseconds: 50 * index))
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.1, end: 0),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            icon: LucideIcons.truck,
-            value: CourierMockData.deliveriesToday.toDouble(),
-            label: 'Deliveries',
-            isCurrency: false,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            icon: LucideIcons.wallet,
-            value: CourierMockData.earningsToday,
-            label: 'Earnings',
-            isCurrency: true,
-          ),
-        ),
+        ],
       ],
     );
   }
@@ -664,7 +681,8 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
+      scaleFactor: 0.98,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),

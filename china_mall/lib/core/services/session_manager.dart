@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
 /// Attach this to your app's navigator key.
@@ -36,6 +37,23 @@ class SessionManager {
 
   static void dispose() {
     _timer?.cancel();
+  }
+
+  static const String _lastFullLoginKey = 'last_full_login_timestamp';
+  static const int _fullLoginCycleDays = 30;
+
+  static Future<bool> requiresFullLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastFullLogin = prefs.getInt(_lastFullLoginKey);
+    if (lastFullLogin == null) return true;
+    final lastLoginDate = DateTime.fromMillisecondsSinceEpoch(lastFullLogin);
+    final daysSinceFullLogin = DateTime.now().difference(lastLoginDate).inDays;
+    return daysSinceFullLogin >= _fullLoginCycleDays;
+  }
+
+  static Future<void> recordFullLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastFullLoginKey, DateTime.now().millisecondsSinceEpoch);
   }
 }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/shared_widgets.dart';
 import '../../../data/mock_trends.dart';
 
@@ -136,16 +138,22 @@ class _TrendsScreenState extends State<TrendsScreen>
                 ),
               ),
             ],
-          ),
+          ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.1, end: 0),
           const Spacer(),
-          _HeaderIconButton(
-            icon: LucideIcons.search,
+          Pressable(
             onTap: () => context.go('/search'),
+            child: _HeaderIconButton(
+              icon: LucideIcons.search,
+              onTap: () => context.go('/search'),
+            ),
           ),
           const SizedBox(width: 10),
-          _HeaderIconButton(
-            icon: LucideIcons.heart,
+          Pressable(
             onTap: () {},
+            child: _HeaderIconButton(
+              icon: LucideIcons.heart,
+              onTap: () {},
+            ),
           ),
         ],
       ),
@@ -302,7 +310,7 @@ class _TrendsScreenState extends State<TrendsScreen>
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 0.95, end: 1.0, curve: Curves.easeOutCubic);
   }
 
   Widget _buildFeaturedThumb(TrendProduct product) {
@@ -525,7 +533,7 @@ class _TrendsScreenState extends State<TrendsScreen>
                   ],
                 ),
               ),
-            );
+            ).animate(delay: Duration(milliseconds: 30 * index)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
           },
         ),
       ),
@@ -559,7 +567,8 @@ class _TrendsScreenState extends State<TrendsScreen>
           ),
         );
       },
-      child: GestureDetector(
+      child: Pressable(
+        scaleFactor: 0.97,
         onTap: () => context.go('/stores/${store.id}'),
         child: Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -748,21 +757,10 @@ class _AnimatedProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 400 + (index * 80)),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - value)),
-            child: child,
-          ),
-        );
-      },
-      child: _ProductCard(product: product, onTap: onTap),
-    );
+    return _ProductCard(product: product, onTap: onTap)
+        .animate(delay: Duration(milliseconds: 50 * index))
+        .fadeIn(duration: 350.ms)
+        .slideY(begin: 0.1, end: 0);
   }
 }
 
@@ -774,7 +772,8 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
+      scaleFactor: 0.97,
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

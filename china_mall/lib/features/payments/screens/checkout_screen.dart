@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -20,7 +21,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityCtrl = TextEditingController();
   final _postalCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _recipientNameCtrl = TextEditingController();
+  final _recipientPhoneCtrl = TextEditingController();
+  final _giftMessageCtrl = TextEditingController();
   bool _placing = false;
+  bool _sendToOther = false;
+  bool _isGift = false;
 
   static const _provinces = [
     'Gauteng', 'Western Cape', 'KwaZulu-Natal', 'Eastern Cape',
@@ -30,7 +36,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   void dispose() {
-    for (final c in [_addressCtrl, _cityCtrl, _postalCtrl, _notesCtrl]) {
+    for (final c in [_addressCtrl, _cityCtrl, _postalCtrl, _notesCtrl, _recipientNameCtrl, _recipientPhoneCtrl, _giftMessageCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -156,10 +162,137 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const InputDecoration(labelText: 'Order Notes (optional)'),
               ),
 
+              const SizedBox(height: 20),
+
+              // ── Send to someone else ────────────────────────────────
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(LucideIcons.userPlus, size: 18, color: AppColors.textSecondary),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Send to someone else',
+                            style: TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: _sendToOther,
+                          activeTrackColor: AppColors.primary,
+                          onChanged: (v) => setState(() => _sendToOther = v),
+                        ),
+                      ],
+                    ),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: _sendToOther
+                          ? Column(
+                              children: [
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _recipientNameCtrl,
+                                  decoration: const InputDecoration(labelText: 'Recipient Name'),
+                                  validator: (v) => _sendToOther && (v == null || v.isEmpty) ? 'Required' : null,
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _recipientPhoneCtrl,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: const InputDecoration(labelText: 'Recipient Phone'),
+                                  validator: (v) => _sendToOther && (v == null || v.isEmpty) ? 'Required' : null,
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  children: [
+                                    Icon(LucideIcons.gift, size: 18, color: AppColors.textSecondary),
+                                    const SizedBox(width: 10),
+                                    const Expanded(
+                                      child: Text(
+                                        'This is a gift',
+                                        style: TextStyle(
+                                          fontFamily: 'Satoshi',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                    Switch.adaptive(
+                                      value: _isGift,
+                                      activeTrackColor: AppColors.primary,
+                                      onChanged: (v) => setState(() => _isGift = v),
+                                    ),
+                                  ],
+                                ),
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  child: _isGift
+                                      ? Column(
+                                          children: [
+                                            const SizedBox(height: 10),
+                                            TextFormField(
+                                              controller: _giftMessageCtrl,
+                                              maxLength: 150,
+                                              maxLines: 2,
+                                              decoration: const InputDecoration(
+                                                labelText: 'Gift Message',
+                                                hintText: 'Add a personal message...',
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(LucideIcons.info, size: 14, color: AppColors.textTertiary),
+                                    const SizedBox(width: 6),
+                                    const Expanded(
+                                      child: Text(
+                                        'The recipient will only be notified on the day of delivery, not before.',
+                                        style: TextStyle(
+                                          fontFamily: 'Satoshi',
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: AppColors.textTertiary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 28),
               Text('Order Summary',
                   style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 12),
+
+              // ── Delivery Schedule ───────────────────────────────────
+              const _DeliveryScheduleCard(),
+              const SizedBox(height: 16),
 
               ...cart.items.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -252,6 +385,107 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Delivery Schedule Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DeliveryScheduleCard extends StatelessWidget {
+  const _DeliveryScheduleCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final hour = DateTime.now().hour;
+
+    final String batchLabel;
+    final String deliveryEstimate;
+
+    if (hour < 9) {
+      batchLabel = 'Morning Batch (9:00 AM)';
+      deliveryEstimate = 'Expected delivery: Today by 1:00 PM';
+    } else if (hour < 15) {
+      batchLabel = 'Afternoon Batch (3:00 PM)';
+      deliveryEstimate = 'Expected delivery: Today by 7:00 PM';
+    } else {
+      batchLabel = "Tomorrow's Morning Batch (9:00 AM)";
+      deliveryEstimate = 'Expected delivery: Tomorrow by 1:00 PM';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(LucideIcons.truck, size: 18, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text(
+              'Delivery Schedule',
+              style: TextStyle(
+                fontFamily: 'Satoshi',
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$batchLabel — $deliveryEstimate',
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Orders are collected in batches at 9:00 AM and 3:00 PM daily from China Mall.',
+                          style: TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 12,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

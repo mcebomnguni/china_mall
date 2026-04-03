@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/shared_widgets.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'edit_profile_screen.dart';
@@ -181,60 +184,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
  
               // ── Avatar ─────────────────────────────────────────────────
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4))
-                  ],
-                ),
-                child: Center(
-                  child: Icon(
-                    switch (role) {
-                      'vendor' => CupertinoIcons.house_fill,
-                      'courier' => CupertinoIcons.car_fill,
-                      'staff' || 'admin' => CupertinoIcons.shield_lefthalf_fill,
-                      _ => CupertinoIcons.person_fill,
-                    },
-                    size: 36,
-                    color: roleColor,
+              Column(
+                children: [
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4))
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        switch (role) {
+                          'vendor' => CupertinoIcons.house_fill,
+                          'courier' => CupertinoIcons.car_fill,
+                          'staff' || 'admin' => CupertinoIcons.shield_lefthalf_fill,
+                          _ => CupertinoIcons.person_fill,
+                        },
+                        size: 36,
+                        color: roleColor,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                name.isNotEmpty ? name : username,
-                style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.black),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                role.toUpperCase(),
-                style: TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                    color: roleColor),
-              ),
-              if (email.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(email,
+                  const SizedBox(height: 12),
+                  Text(
+                    name.isNotEmpty ? name : username,
                     style: const TextStyle(
                         fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        color: AppColors.textTertiary)),
-              ],
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.black),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    role.toUpperCase(),
+                    style: TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: roleColor),
+                  ),
+                  if (email.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(email,
+                        style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 12,
+                            color: AppColors.textTertiary)),
+                  ],
+                ],
+              ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 0.95, end: 1.0, curve: Curves.easeOutCubic),
  
               const SizedBox(height: 32),
  
@@ -245,219 +252,264 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Account ───────────────────────────────────────
-                    const SectionLabel(title: 'Account'),
-                    const SizedBox(height: 8),
-                    OsCard(
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          _MenuItem(
-                            icon: CupertinoIcons.person,
-                            label: 'Edit Profile',
-                            onTap: () => _push(const EditProfileScreen()),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionLabel(title: 'Account'),
+                        const SizedBox(height: 8),
+                        OsCard(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              _MenuItem(
+                                icon: CupertinoIcons.person,
+                                label: 'Edit Profile',
+                                onTap: () => _push(const EditProfileScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.lock,
+                                label: 'Change Password',
+                                onTap: () => _push(const ChangePasswordScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.bell,
+                                label: 'Notifications',
+                                onTap: () => _push(const NotificationsScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: LucideIcons.gift,
+                                label: 'Refer & Earn',
+                                badge: Container(
+                                  margin: const EdgeInsets.only(left: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text('NEW', style: TextStyle(fontFamily: 'Satoshi', fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 0.5)),
+                                ),
+                                onTap: () => context.push('/referral'),
+                              ),
+                            ],
                           ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.lock,
-                            label: 'Change Password',
-                            onTap: () => _push(const ChangePasswordScreen()),
-                          ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.bell,
-                            label: 'Notifications',
-                            onTap: () => _push(const NotificationsScreen()),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      ],
+                    ).animate(delay: const Duration(milliseconds: 0)).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
  
                     const SizedBox(height: 20),
  
                     // ── Security ──────────────────────────────────────
-                    const SectionLabel(title: 'Security'),
-                    const SizedBox(height: 8),
-                    OsCard(
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          // Biometric toggle row
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                      color: const Color(0xFFF5F5F5),
-                                      borderRadius: BorderRadius.circular(9)),
-                                  child: const Icon(
-                                      CupertinoIcons.device_phone_portrait,
-                                      size: 18,
-                                      color: AppColors.textSecondary),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionLabel(title: 'Security'),
+                        const SizedBox(height: 8),
+                        OsCard(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              // Biometric toggle row
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                          color: const Color(0xFFF5F5F5),
+                                          borderRadius: BorderRadius.circular(9)),
+                                      child: const Icon(
+                                          CupertinoIcons.device_phone_portrait,
+                                          size: 18,
+                                          color: AppColors.textSecondary),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: Text('Biometric Login',
+                                          style: TextStyle(
+                                              fontFamily: 'Satoshi',
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                              color: AppColors.textPrimary)),
+                                    ),
+                                    Switch.adaptive(
+                                      value: _biometricEnabled,
+                                      activeTrackColor: AppColors.primary,
+                                      onChanged: (v) => _toggleBiometrics(v),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Text('Biometric Login',
-                                      style: TextStyle(
-                                          fontFamily: 'Satoshi',
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                          color: AppColors.textPrimary)),
-                                ),
-                                Switch.adaptive(
-                                  value: _biometricEnabled,
-                                  activeTrackColor: AppColors.primary,
-                                  onChanged: (v) => _toggleBiometrics(v),
-                                ),
-                              ],
-                            ),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.device_phone_portrait,
+                                label: 'Linked Devices',
+                                onTap: () => _push(const LinkedDevicesScreen()),
+                              ),
+                            ],
                           ),
-                          _Divider(),
-                            _MenuItem(
-                            icon: CupertinoIcons.device_phone_portrait,
-                            label: 'Linked Devices',
-                            onTap: () => _push(const LinkedDevicesScreen()),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      ],
+                    ).animate(delay: const Duration(milliseconds: 80)).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
  
                     const SizedBox(height: 20),
  
                     // ── Store (vendor only) ───────────────────────────
                     if (auth.isVendor) ...[
-                      const SectionLabel(title: 'Store'),
-                      const SizedBox(height: 8),
-                      OsCard(
-                        padding: EdgeInsets.zero,
-                        child: Column(
-                          children: [
-                            _MenuItem(
-                              icon: CupertinoIcons.house_fill,
-                              label: 'My Store',
-                              onTap: () => context.go('/vendor/store'),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionLabel(title: 'Store'),
+                          const SizedBox(height: 8),
+                          OsCard(
+                            padding: EdgeInsets.zero,
+                            child: Column(
+                              children: [
+                                _MenuItem(
+                                  icon: CupertinoIcons.house_fill,
+                                  label: 'My Store',
+                                  onTap: () => context.go('/vendor/store'),
+                                ),
+                                _Divider(),
+                                _MenuItem(
+                                  icon: CupertinoIcons.cube_box,
+                                  label: 'My Products',
+                                  onTap: () => context.go('/vendor/products'),
+                                ),
+                                _Divider(),
+                                _MenuItem(
+                                  icon: CupertinoIcons.chart_bar_fill,
+                                  label: 'Payouts',
+                                  onTap: () => context.go('/vendor/payouts'),
+                                ),
+                              ],
                             ),
-                            _Divider(),
-                            _MenuItem(
-                              icon: CupertinoIcons.cube_box,
-                              label: 'My Products',
-                              onTap: () => context.go('/vendor/products'),
-                            ),
-                            _Divider(),
-                            _MenuItem(
-                              icon: CupertinoIcons.chart_bar_fill,
-                              label: 'Payouts',
-                              onTap: () => context.go('/vendor/payouts'),
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        ],
+                      ).animate(delay: const Duration(milliseconds: 160)).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
                       const SizedBox(height: 20),
                     ],
  
                     // ── Role Switch ──────────────────────────────────
-                    const SectionLabel(title: 'Role'),
-                    const SizedBox(height: 8),
-                    OsCard(
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          if (!auth.isCourier)
-                            _MenuItem(
-                              icon: Icons.local_shipping_outlined,
-                              label: 'Switch to Courier',
-                              onTap: () => context.go('/courier'),
-                            ),
-                          if (auth.isCourier)
-                            _MenuItem(
-                              icon: CupertinoIcons.bag,
-                              label: 'Switch to Customer',
-                              onTap: () => context.go('/'),
-                            ),
-                        ],
-                      ),
-                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionLabel(title: 'Role'),
+                        const SizedBox(height: 8),
+                        OsCard(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              if (!auth.isCourier)
+                                _MenuItem(
+                                  icon: Icons.local_shipping_outlined,
+                                  label: 'Switch to Courier',
+                                  onTap: () => context.go('/courier'),
+                                ),
+                              if (auth.isCourier)
+                                _MenuItem(
+                                  icon: CupertinoIcons.bag,
+                                  label: 'Switch to Customer',
+                                  onTap: () => context.go('/'),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ).animate(delay: const Duration(milliseconds: 240)).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
                     const SizedBox(height: 20),
 
                     // ── Preferences ───────────────────────────────────
-                    const SectionLabel(title: 'Preferences'),
-                    const SizedBox(height: 8),
-                    OsCard(
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          _MenuItem(
-                            icon: CupertinoIcons.slider_horizontal_3,
-                            label: 'App Preferences',
-                            onTap: () => _push(const PreferencesScreen()),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionLabel(title: 'Preferences'),
+                        const SizedBox(height: 8),
+                        OsCard(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              _MenuItem(
+                                icon: CupertinoIcons.slider_horizontal_3,
+                                label: 'App Preferences',
+                                onTap: () => _push(const PreferencesScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.checkmark_shield,
+                                label: 'App Permissions',
+                                onTap: () => _push(const PermissionsScreen()),
+                              ),
+                            ],
                           ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.checkmark_shield,
-                            label: 'App Permissions',
-                            onTap: () => _push(const PermissionsScreen()),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      ],
+                    ).animate(delay: const Duration(milliseconds: 320)).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
  
                     const SizedBox(height: 20),
  
                     // ── App ───────────────────────────────────────────
-                    const SectionLabel(title: 'App'),
-                    const SizedBox(height: 8),
-                    OsCard(
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          _MenuItem(
-                            icon: CupertinoIcons.ticket,
-                            label: 'My Support Tickets',
-                            onTap: () => context.push('/support'),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionLabel(title: 'App'),
+                        const SizedBox(height: 8),
+                        OsCard(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              _MenuItem(
+                                icon: CupertinoIcons.ticket,
+                                label: 'My Support Tickets',
+                                onTap: () => context.push('/support'),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.question_circle,
+                                label: 'Help & Support',
+                                onTap: () => _push(const HelpSupportScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.chat_bubble_text,
+                                label: 'Contact Us',
+                                onTap: () => _push(const ContactUsScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.arrow_2_circlepath,
+                                label: 'Return & Refund Policy',
+                                onTap: () => _push(const ReturnRefundScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.doc_text,
+                                label: 'Privacy Policy',
+                                onTap: () => _push(const PrivacyPolicyScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.doc_text,
+                                label: 'Terms of Service',
+                                onTap: () =>
+                                    _push(const TermsAndConditionsScreen()),
+                              ),
+                              _Divider(),
+                              _MenuItem(
+                                icon: CupertinoIcons.info_circle,
+                                label: 'About China Stall Market Place',
+                                onTap: () => _showAbout(context),
+                              ),
+                            ],
                           ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.question_circle,
-                            label: 'Help & Support',
-                            onTap: () => _push(const HelpSupportScreen()),
-                          ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.chat_bubble_text,
-                            label: 'Contact Us',
-                            onTap: () => _push(const ContactUsScreen()),
-                          ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.arrow_2_circlepath,
-                            label: 'Return & Refund Policy',
-                            onTap: () => _push(const ReturnRefundScreen()),
-                          ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.doc_text,
-                            label: 'Privacy Policy',
-                            onTap: () => _push(const PrivacyPolicyScreen()),
-                          ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.doc_text,
-                            label: 'Terms of Service',
-                            onTap: () =>
-                                _push(const TermsAndConditionsScreen()),
-                          ),
-                          _Divider(),
-                          _MenuItem(
-                            icon: CupertinoIcons.info_circle,
-                            label: 'About China Stall Market Place',
-                            onTap: () => _showAbout(context),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      ],
+                    ).animate(delay: const Duration(milliseconds: 400)).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
  
                     const SizedBox(height: 20),
  
@@ -484,7 +536,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                    ),
+                    ).animate(delay: 500.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
  
                     const SizedBox(height: 40),
                     const Center(
@@ -561,7 +613,8 @@ class _MenuItem extends StatelessWidget {
   final Color? labelColor;
   final Color? iconColor;
   final bool showChevron;
- 
+  final Widget? badge;
+
   const _MenuItem({
     required this.icon,
     required this.label,
@@ -569,13 +622,14 @@ class _MenuItem extends StatelessWidget {
     this.labelColor,
     this.iconColor,
     this.showChevron = true,
+    this.badge,
   });
  
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      scaleFactor: 0.98,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
@@ -591,14 +645,19 @@ class _MenuItem extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: labelColor ?? AppColors.textPrimary,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: labelColor ?? AppColors.textPrimary,
+                    ),
+                  ),
+                  if (badge != null) badge!,
+                ],
               ),
             ),
             if (showChevron)

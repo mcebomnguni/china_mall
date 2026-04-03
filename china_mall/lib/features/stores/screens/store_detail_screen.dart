@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/shared_widgets.dart';
 import '../../../constants/product_images.dart';
 import '../../../data/mock_trends.dart';
@@ -223,7 +225,11 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, i) =>
-                              _buildProductCard(_filteredProducts[i]),
+                              Pressable(
+                                scaleFactor: 0.97,
+                                onTap: () => context.go('/products/${_filteredProducts[i]['id']}'),
+                                child: _buildProductCard(_filteredProducts[i]),
+                              ).animate(delay: Duration(milliseconds: 50 * i)).fadeIn(duration: 350.ms).slideY(begin: 0.12, end: 0).scaleXY(begin: 0.96, end: 1.0),
                           childCount: _filteredProducts.length,
                         ),
                       ),
@@ -410,7 +416,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                   child: Icon(LucideIcons.image, color: AppColors.textTertiary),
                 ),
               ),
-            ),
+            ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 1.05, end: 1.0, curve: Curves.easeOut),
           ),
           // Dark gradient overlay bottom 40%
           Positioned(
@@ -636,17 +642,17 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                     _buildStat(
                       _formatCount((_storeFollowers * t).round()),
                       'Followers',
-                    ),
+                    ).animate(delay: const Duration(milliseconds: 0)).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
                     _statDivider(),
                     _buildStat(
                       '${(_storeProductCount * t).round()}',
                       'Products',
-                    ),
+                    ).animate(delay: const Duration(milliseconds: 100)).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
                     _statDivider(),
                     _buildStat(
                       '${(_storePositiveRate * t).round()}%',
                       'Positive',
-                    ),
+                    ).animate(delay: const Duration(milliseconds: 200)).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
                   ],
                 ),
               );
@@ -736,7 +742,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                     ],
                   ),
                 ),
-              );
+              ).animate(delay: Duration(milliseconds: 30 * i)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
             }
 
             final label = _filterLabels[i];
@@ -764,7 +770,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
                   ),
                 ),
               ),
-            );
+            ).animate(delay: Duration(milliseconds: 30 * i)).fadeIn(duration: 250.ms).slideX(begin: 0.15, end: 0);
           },
         ),
       ),
@@ -784,9 +790,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
         double.tryParse(p['average_rating']?.toString() ?? '') ?? 4.7;
     final isProductLiked = _likedProducts.contains(productId);
 
-    return GestureDetector(
-      onTap: () => context.go('/products/$productId'),
-      child: Container(
+    return Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
@@ -1009,7 +1013,6 @@ class _StoreDetailScreenState extends State<StoreDetailScreen>
             ),
           ],
         ),
-      ),
     );
   }
 

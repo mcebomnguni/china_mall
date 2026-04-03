@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/batch_schedule.dart';
 
@@ -60,6 +61,8 @@ class _CountdownTimerState extends State<CountdownTimer>
   @override
   Widget build(BuildContext context) {
     final isUrgent = widget.batch.isUrgent;
+    final isCritical = _remaining.inMinutes < 5 && !_remaining.isNegative;
+    final accentColor = isCritical || isUrgent ? AppColors.error : AppColors.primary;
 
     return AnimatedBuilder(
       animation: _pulseController,
@@ -86,7 +89,7 @@ class _CountdownTimerState extends State<CountdownTimer>
             Icon(
               Icons.timer_outlined,
               size: 18,
-              color: isUrgent ? AppColors.error : AppColors.primary,
+              color: accentColor,
             ),
             const SizedBox(width: 8),
             Text(
@@ -95,9 +98,15 @@ class _CountdownTimerState extends State<CountdownTimer>
                 fontFamily: 'monospace',
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: isUrgent ? AppColors.error : AppColors.primary,
+                color: accentColor,
               ),
-            ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(
+                  begin: 1.0,
+                  end: 1.02,
+                  duration: const Duration(milliseconds: 1000),
+                ),
           ],
         ),
       ),

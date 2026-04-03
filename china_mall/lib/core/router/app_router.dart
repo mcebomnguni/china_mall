@@ -56,6 +56,59 @@ import '../../features/support/screens/create_ticket_screen.dart';
 import '../../features/support/screens/ticket_chat_screen.dart';
 import '../../features/auth/screens/security_setup_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
+import '../../features/customer/screens/referral_screen.dart';
+
+// ── Custom page transition helpers ──────────────────────────────────────────
+CustomTransitionPage<void> _slideTransitionPage({
+  required Widget child,
+  required GoRouterState state,
+}) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        )),
+        child: FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          ),
+          child: child,
+        ),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 250),
+  );
+}
+
+CustomTransitionPage<void> _fadeTransitionPage({
+  required Widget child,
+  required GoRouterState state,
+}) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOut,
+        ),
+        child: child,
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 200),
+    reverseTransitionDuration: const Duration(milliseconds: 150),
+  );
+}
 
 final _rootNavKey = GlobalKey<NavigatorState>();
 final _shellNavKey = GlobalKey<NavigatorState>();
@@ -138,156 +191,173 @@ GoRouter createRouter(AuthProvider auth) {
         navigatorKey: _shellNavKey,
         builder: (context, state, child) => MainShell(child: child),
         routes: [
+          // ── Tab-level routes (fade transition) ──────────────────
           GoRoute(
             path: '/',
-            builder: (_, __) {
-              if (auth.isVendor) return const VendorDashboardScreen();
-              if (auth.isCourier) return const CourierDashboardScreen();
-              if (auth.isStaff) return const AdminDashboardScreen();
-              return const HomeScreen();
+            pageBuilder: (_, state) {
+              Widget screen;
+              if (auth.isVendor) {
+                screen = const VendorDashboardScreen();
+              } else if (auth.isCourier) {
+                screen = const CourierDashboardScreen();
+              } else if (auth.isStaff) {
+                screen = const AdminDashboardScreen();
+              } else {
+                screen = const HomeScreen();
+              }
+              return _fadeTransitionPage(child: screen, state: state);
             },
           ),
           GoRoute(
               path: '/products',
-              builder: (_, __) => const ProductsScreen()),
-          GoRoute(
-              path: '/products/:id',
-              builder: (_, state) => ProductDetailScreen(
-                  id: int.parse(state.pathParameters['id']!))),
-          GoRoute(
-              path: '/stores',
-              builder: (_, __) => const StoresScreen()),
-          GoRoute(
-              path: '/stores/:id',
-              builder: (_, state) => StoreDetailScreen(
-                  id: int.parse(state.pathParameters['id']!))),
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const ProductsScreen(), state: state)),
           GoRoute(
               path: '/trends',
-              builder: (_, __) => const TrendsScreen()),
-          GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const TrendsScreen(), state: state)),
           GoRoute(
-              path: '/orders', builder: (_, __) => const OrdersScreen()),
+              path: '/cart',
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const CartScreen(), state: state)),
           GoRoute(
-              path: '/orders/:id',
-              builder: (_, state) => OrderDetailScreen(
-                  id: int.parse(state.pathParameters['id']!))),
-          GoRoute(
-              path: '/orders/:id/track',
-              builder: (_, state) => OrderTrackingScreen(
-                  id: int.parse(state.pathParameters['id']!))),
-          GoRoute(
-              path: '/checkout',
-              builder: (_, __) => const CheckoutScreen()),
-          GoRoute(
-              path: '/payment/:orderId',
-              builder: (_, state) => PaymentScreen(
-                  orderId: int.parse(state.pathParameters['orderId']!))),
-          GoRoute(
-              path: '/profile', builder: (_, __) => const ProfileScreen()),
+              path: '/profile',
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const ProfileScreen(), state: state)),
           GoRoute(
               path: '/vendor',
-              builder: (_, __) => const VendorDashboardScreen()),
-          GoRoute(
-              path: '/vendor/products',
-              builder: (_, __) => const VendorProductsScreen()),
-          GoRoute(
-              path: '/vendor/products/add',
-              builder: (_, __) => const AddProductScreen()),
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const VendorDashboardScreen(), state: state)),
           GoRoute(
               path: '/courier',
-              builder: (_, __) => const CourierHomeScreen()),
-          GoRoute(
-              path: '/courier/pickups',
-              builder: (_, __) => const PickupAssignmentsScreen()),
-          GoRoute(
-              path: '/courier/pickup/:id',
-              builder: (_, state) => PickupDetailScreen(
-                  assignmentId: int.parse(state.pathParameters['id']!))),
-          GoRoute(
-              path: '/courier/deliveries',
-              builder: (_, __) => const ActiveDeliveriesScreen()),
-          GoRoute(
-              path: '/courier/deliver/:id',
-              builder: (_, state) => DeliveryHandoffScreen(
-                  deliveryId: int.parse(state.pathParameters['id']!))),
-          GoRoute(
-              path: '/courier/history',
-              builder: (_, __) => const CourierHistoryScreen()),
-          GoRoute(
-              path: '/courier/earnings',
-              builder: (_, __) => const CourierEarningsScreen()),
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const CourierHomeScreen(), state: state)),
           GoRoute(
               path: '/admin',
-              builder: (_, __) => const AdminDashboardScreen()),
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const AdminDashboardScreen(), state: state)),
+
+          // ── Push-level routes (slide + fade transition) ────────
+          GoRoute(
+              path: '/products/:id',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: ProductDetailScreen(id: int.parse(state.pathParameters['id']!)), state: state)),
+          GoRoute(
+              path: '/stores',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const StoresScreen(), state: state)),
+          GoRoute(
+              path: '/stores/:id',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: StoreDetailScreen(id: int.parse(state.pathParameters['id']!)), state: state)),
+          GoRoute(
+              path: '/orders',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const OrdersScreen(), state: state)),
+          GoRoute(
+              path: '/orders/:id',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: OrderDetailScreen(id: int.parse(state.pathParameters['id']!)), state: state)),
+          GoRoute(
+              path: '/orders/:id/track',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: OrderTrackingScreen(id: int.parse(state.pathParameters['id']!)), state: state)),
+          GoRoute(
+              path: '/checkout',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const CheckoutScreen(), state: state)),
+          GoRoute(
+              path: '/payment/:orderId',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: PaymentScreen(orderId: int.parse(state.pathParameters['orderId']!)), state: state)),
+          GoRoute(
+              path: '/vendor/products',
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const VendorProductsScreen(), state: state)),
+          GoRoute(
+              path: '/vendor/products/add',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const AddProductScreen(), state: state)),
+          GoRoute(
+              path: '/courier/pickups',
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const PickupAssignmentsScreen(), state: state)),
+          GoRoute(
+              path: '/courier/pickup/:id',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: PickupDetailScreen(assignmentId: int.parse(state.pathParameters['id']!)), state: state)),
+          GoRoute(
+              path: '/courier/deliveries',
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const ActiveDeliveriesScreen(), state: state)),
+          GoRoute(
+              path: '/courier/deliver/:id',
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: DeliveryHandoffScreen(deliveryId: int.parse(state.pathParameters['id']!)), state: state)),
+          GoRoute(
+              path: '/courier/history',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const CourierHistoryScreen(), state: state)),
+          GoRoute(
+              path: '/courier/earnings',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const CourierEarningsScreen(), state: state)),
+          GoRoute(
+              path: '/referral',
+              pageBuilder: (_, state) => _slideTransitionPage(child: const ReferralScreen(), state: state)),
           GoRoute(
               path: '/profile/edit',
-              builder: (_, __) => const EditProfileScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const EditProfileScreen(), state: state)),
           GoRoute(
               path: '/profile/password',
-              builder: (_, __) => const ChangePasswordScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const ChangePasswordScreen(), state: state)),
           GoRoute(
               path: '/orders/returns',
-              builder: (_, __) => const ReturnsScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const ReturnsScreen(), state: state)),
           GoRoute(
               path: '/orders/disputes',
-              builder: (_, __) => const DisputesScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const DisputesScreen(), state: state)),
           GoRoute(
               path: '/payments/history',
-              builder: (_, __) => const PaymentHistoryScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const PaymentHistoryScreen(), state: state)),
           GoRoute(
               path: '/vendor/orders',
-              builder: (_, __) => const VendorOrdersScreen()),
+              pageBuilder: (_, state) => _fadeTransitionPage(child: const VendorOrdersScreen(), state: state)),
           GoRoute(
               path: '/vendor/payouts',
-              builder: (_, __) => const VendorPayoutsScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const VendorPayoutsScreen(), state: state)),
           GoRoute(
               path: '/vendor/store',
-              builder: (_, __) => const ManageStoreScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const ManageStoreScreen(), state: state)),
           GoRoute(
               path: '/vendor/store/register',
-              builder: (_, __) => const RegisterStoreScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const RegisterStoreScreen(), state: state)),
           GoRoute(
               path: '/vendor/setup',
-              builder: (_, __) => const VendorTypeScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const VendorTypeScreen(), state: state)),
           GoRoute(
               path: '/vendor/onboarding/formal',
-              builder: (_, __) => const VendorOnboardingFormalScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const VendorOnboardingFormalScreen(), state: state)),
           GoRoute(
               path: '/vendor/onboarding/informal',
-              builder: (_, __) => const VendorOnboardingInformalScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const VendorOnboardingInformalScreen(), state: state)),
           GoRoute(
               path: '/vendor/products/:id/edit',
-              builder: (_, state) => EditProductScreen(
-                  productId: int.parse(state.pathParameters['id']!))),
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: EditProductScreen(productId: int.parse(state.pathParameters['id']!)), state: state)),
           GoRoute(
               path: '/vendor/orders/:id',
-              builder: (_, state) => VendorOrderDetailScreen(
-                  orderId: int.parse(state.pathParameters['id']!))),
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: VendorOrderDetailScreen(orderId: int.parse(state.pathParameters['id']!)), state: state)),
           GoRoute(
               path: '/vendor/ads',
-              builder: (_, __) => const VendorAdsScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const VendorAdsScreen(), state: state)),
           GoRoute(
               path: '/vendor/analytics',
-              builder: (_, __) => const VendorAnalyticsScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const VendorAnalyticsScreen(), state: state)),
           GoRoute(
               path: '/search',
-              builder: (_, __) => const SearchScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const SearchScreen(), state: state)),
           GoRoute(
               path: '/dashboard',
-              builder: (_, __) => const BuyerDashboardScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const BuyerDashboardScreen(), state: state)),
           GoRoute(
               path: '/notifications',
-              builder: (_, __) => const NotificationsScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const NotificationsScreen(), state: state)),
           GoRoute(
               path: '/support',
-              builder: (_, __) => const SupportTicketsScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const SupportTicketsScreen(), state: state)),
           GoRoute(
               path: '/support/new',
-              builder: (_, __) => const CreateTicketScreen()),
+              pageBuilder: (_, state) => _slideTransitionPage(child: const CreateTicketScreen(), state: state)),
           GoRoute(
               path: '/support/:id',
-              builder: (_, state) => TicketChatScreen(
-                  ticketId: int.parse(state.pathParameters['id']!))),
+              pageBuilder: (_, state) => _slideTransitionPage(
+                  child: TicketChatScreen(ticketId: int.parse(state.pathParameters['id']!)), state: state)),
         ],
       ),
     ],

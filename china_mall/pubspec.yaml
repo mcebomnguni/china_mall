@@ -38,6 +38,9 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   flutter_staggered_grid_view: ^0.7.0
 
+  # ─── Sharing ────────────────────────────────────────────────────────────
+  share_plus: ^10.1.4
+
   # ─── Media ──────────────────────────────────────────────────────────────
   image_picker: ^1.1.2
   url_launcher: ^6.3.1
@@ -73,6 +76,7 @@ dependencies:
   supabase_flutter: ^1.5.0
   lucide_icons: ^0.257.0
   collection: ^1.19.1
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:

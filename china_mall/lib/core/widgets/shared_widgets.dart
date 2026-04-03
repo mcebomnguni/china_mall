@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
+import 'pressable.dart';
 
 // ─── Shimmer skeleton ────────────────────────────────────────────────────────
 class ShimmerBox extends StatelessWidget {
@@ -206,13 +208,10 @@ class OsCard extends StatelessWidget {
       child: child,
     );
     if (onTap == null) return card;
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
-      child: AnimatedScale(
-        scale: 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: card,
-      ),
+      scaleFactor: 0.98,
+      child: card,
     );
   }
 }
@@ -286,7 +285,14 @@ class EmptyState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(icon, size: 28, color: AppColors.textTertiary),
-            ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .moveY(
+                  begin: 0,
+                  end: -8,
+                  duration: const Duration(milliseconds: 2000),
+                  curve: Curves.easeInOut,
+                ),
             const SizedBox(height: 16),
             Text(
               title,
@@ -295,7 +301,9 @@ class EmptyState extends StatelessWidget {
                 fontSize: 16, color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
-            ),
+            )
+                .animate()
+                .fadeIn(delay: 200.ms, duration: 400.ms),
             const SizedBox(height: 6),
             Text(
               subtitle,
@@ -304,10 +312,19 @@ class EmptyState extends StatelessWidget {
                 fontSize: 13, color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
-            ),
+            )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 400.ms),
             if (buttonLabel != null) ...[
               const SizedBox(height: 24),
-              AppButton(label: buttonLabel!, onTap: onButton),
+              AppButton(label: buttonLabel!, onTap: onButton)
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scaleXY(
+                    begin: 1.0,
+                    end: 1.02,
+                    duration: const Duration(milliseconds: 1500),
+                    curve: Curves.easeInOut,
+                  ),
             ],
           ],
         ),

@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../payments/screens/payment_flow_screen.dart';
 import '../../products/screens/discount_voucher_screen.dart';
  
@@ -411,7 +413,8 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                     ),
-                    GestureDetector(
+                    Pressable(
+                      scaleFactor: 0.9,
                       onTap: () async {
                         for (final item in storeItems) {
                           await _removeItem((item as Map<String, dynamic>)['id']);
@@ -434,7 +437,10 @@ class _CartScreenState extends State<CartScreen> {
               }),
             ],
           ),
-        );
+        )
+            .animate(delay: Duration(milliseconds: 80 * groupIndex))
+            .fadeIn(duration: 350.ms, curve: Curves.easeOutCubic)
+            .slideY(begin: 0.1, end: 0, duration: 350.ms, curve: Curves.easeOutCubic);
       },
     );
   }
@@ -589,34 +595,39 @@ class _CartScreenState extends State<CartScreen> {
                                 ],
                               ),
                               const Spacer(),
-                              SizedBox(
-                                height: 50,
-                                child: ElevatedButton(
-                                  onPressed: _checkingOut ? null : _checkout,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.textPrimary,
-                                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14)),
+                              Pressable(
+                                scaleFactor: 0.96,
+                                enableHaptic: true,
+                                onTap: _checkingOut ? null : _checkout,
+                                child: SizedBox(
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    onPressed: _checkingOut ? null : _checkout,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.textPrimary,
+                                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    child: _checkingOut
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Checkout',
+                                            style: TextStyle(
+                                              fontFamily: 'Satoshi',
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 15,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                   ),
-                                  child: _checkingOut
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Checkout',
-                                          style: TextStyle(
-                                            fontFamily: 'Satoshi',
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 15,
-                                            color: Colors.white,
-                                          ),
-                                        ),
                                 ),
                               ),
                             ],
